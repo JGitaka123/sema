@@ -1,0 +1,31 @@
+{
+  "safety.emergency": "This sounds like it may be an emergency. Please call 999 or 112, or go to the nearest emergency department right now. If you are at {clinic}, tell the desk immediately. I have alerted our team and someone will call you at this number.",
+  "safety.distress": "I am really sorry you are going through this, and I am glad you said something. I am the front-desk assistant so I am not the right person to talk this through, but people who are are available right now: Kenya Red Cross on 1199, or Befrienders Kenya on {befrienders_phone}. I have let our team know so someone can reach out.",
+  "safety.out_of_scope": "I am the front-desk assistant, so I cannot advise on symptoms or medication. What I can do is get you the earliest appointment with {provider}, or ask a nurse to call you. Which would you prefer?",
+  "safety.abuse_warning": "I would like to keep helping you, but I need us to keep this respectful. Would you like me to connect you to a member of our team?",
+
+  "handover.in_hours": "Let me get a team member to help you with this. Someone will reply here shortly.",
+  "handover.out_of_hours": "Our team is offline until {opens_at}. I have flagged your message so they see it first thing. If this is urgent, please call {clinic_phone}.",
+  "handover.taken_over": "You are now chatting with our team.",
+
+  "greeting.new_patient": "Hello, and welcome to {clinic}. I am the front-desk assistant. I can book, move or cancel an appointment, and answer questions about our services and hours. How can I help?",
+  "greeting.returning_patient": "Hello again, {name}. How can I help today?",
+
+  "booking.ask_service": "What would you like to book? Here is what we offer.",
+  "booking.offer_slots": "Here are the next available times with {provider}. Which works for you?",
+  "booking.no_slots": "I do not have anything free in that window. Would you like me to look further ahead, or put you on the cancellation list?",
+  "booking.confirmed": "Booked. {service} with {provider} on {when} at {location}. I will remind you the day before.",
+  "booking.cancelled": "Cancelled: {service} on {when}. Would you like to rebook?",
+  "booking.rescheduled": "Moved. {service} with {provider} is now on {when}.",
+  "booking.hold_expired": "That time was taken while we were talking. Let me find you another slot.",
+
+  "payment.deposit_request": "To hold this appointment we ask for a {amount} deposit. I am sending an M-Pesa prompt to {phone} now — please enter your PIN.",
+  "payment.deposit_confirmed": "Deposit received. Your appointment is confirmed.",
+  "payment.deposit_failed": "That M-Pesa prompt did not go through. Would you like me to try again?",
+
+  "reminder.day_before": "Reminder: {service} with {provider} tomorrow at {time}, at {location}. Reply CONFIRM to keep it, or RESCHEDULE to move it.",
+  "reminder.confirmed": "Thank you, we will see you then.",
+
+  "error.generic": "Something went wrong on my side. Let me get a team member to help you.",
+  "error.unavailable": "I cannot check that right now. Would you like someone from our team to call you back?"
+}

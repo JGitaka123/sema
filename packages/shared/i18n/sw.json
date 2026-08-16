@@ -1,0 +1,31 @@
+{
+  "safety.emergency": "Hii inaonekana kama dharura. Tafadhali piga simu 999 au 112, au nenda kwa hospitali ya dharura iliyo karibu sasa hivi. Kama uko {clinic}, mwambie mhudumu wa mapokezi mara moja. Nimewajulisha wenzangu na mtu atakupigia kwa nambari hii.",
+  "safety.distress": "Pole sana kwa unayopitia, na asante kwa kuniambia. Mimi ni msaidizi wa mapokezi, kwa hivyo si mimi wa kuzungumza nawe kuhusu hili, lakini wako watu tayari kukusikiliza sasa hivi: Kenya Red Cross kwa 1199, au Befrienders Kenya kwa {befrienders_phone}. Nimewajulisha wenzangu ili mtu akufuatilie.",
+  "safety.out_of_scope": "Mimi ni msaidizi wa mapokezi, kwa hivyo siwezi kukushauri kuhusu dalili au dawa. Ninachoweza kufanya ni kukupatia miadi ya karibu zaidi na {provider}, au kumwomba muuguzi akupigie simu. Ungependa ipi?",
+  "safety.abuse_warning": "Ningependa kuendelea kukusaidia, lakini tuheshimiane. Ungependa nikuunganishe na mfanyakazi wetu?",
+
+  "handover.in_hours": "Wacha nimtafute mfanyakazi wetu akusaidie. Mtu atakujibu hapa hivi punde.",
+  "handover.out_of_hours": "Wenzangu hawapo hadi saa {opens_at}. Nimeweka ujumbe wako mbele ili waone mara ya kwanza. Kama ni dharura, tafadhali piga {clinic_phone}.",
+  "handover.taken_over": "Sasa unaongea na mfanyakazi wetu.",
+
+  "greeting.new_patient": "Habari, na karibu {clinic}. Mimi ni msaidizi wa mapokezi. Naweza kupanga, kubadilisha au kufuta miadi, na kujibu maswali kuhusu huduma na saa zetu. Nikusaidie aje?",
+  "greeting.returning_patient": "Habari tena, {name}. Nikusaidie aje leo?",
+
+  "booking.ask_service": "Ungependa kupanga miadi ya nini? Hizi ndizo huduma zetu.",
+  "booking.offer_slots": "Hizi ndizo nyakati zinazopatikana na {provider}. Ipi inakufaa?",
+  "booking.no_slots": "Sina nafasi katika kipindi hicho. Ungependa niangalie mbele zaidi, au nikuweke kwenye orodha ya nafasi zikitokea?",
+  "booking.confirmed": "Imepangwa. {service} na {provider} tarehe {when} pale {location}. Nitakukumbusha siku moja kabla.",
+  "booking.cancelled": "Imefutwa: {service} ya tarehe {when}. Ungependa kupanga tena?",
+  "booking.rescheduled": "Imehamishwa. {service} na {provider} sasa ni tarehe {when}.",
+  "booking.hold_expired": "Nafasi hiyo imechukuliwa tulipokuwa tunaongea. Wacha nikutafutie nyingine.",
+
+  "payment.deposit_request": "Ili kushikilia miadi hii tunaomba amana ya {amount}. Ninatuma ombi la M-Pesa kwa {phone} sasa — tafadhali weka PIN yako.",
+  "payment.deposit_confirmed": "Amana imepokelewa. Miadi yako imethibitishwa.",
+  "payment.deposit_failed": "Ombi hilo la M-Pesa halikufaulu. Ungependa nijaribu tena?",
+
+  "reminder.day_before": "Kumbusho: {service} na {provider} kesho saa {time}, pale {location}. Jibu CONFIRM kuithibitisha, au RESCHEDULE kuihamisha.",
+  "reminder.confirmed": "Asante, tutaonana wakati huo.",
+
+  "error.generic": "Kuna hitilafu upande wangu. Wacha nimtafute mfanyakazi wetu akusaidie.",
+  "error.unavailable": "Siwezi kuangalia hilo sasa hivi. Ungependa mtu kutoka kwa timu yetu akupigie simu?"
+}

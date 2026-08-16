@@ -1,0 +1,50 @@
+# Sema API — build context is the repo root:
+#   docker build -f infra/Dockerfile.api -t sema-api .
+#
+# Multi-stage: deps are installed once against the lockfile, the workspace is
+# compiled, and the runtime stage carries no build toolchain and runs unprivileged.
+
+FROM node:20-alpine AS base
+ENV PNPM_HOME=/pnpm
+ENV PATH=$PNPM_HOME:$PATH
+RUN corepack enable
+WORKDIR /app
+
+# ── deps ──────────────────────────────────────────────────────────────────────
+# Only manifests are copied here, so a source-only change reuses this layer.
+FROM base AS deps
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
+COPY apps/api/package.json ./apps/api/
+COPY apps/worker/package.json ./apps/worker/
+COPY apps/inbox/package.json ./apps/inbox/
+COPY packages/shared/package.json ./packages/shared/
+COPY packages/db/package.json ./packages/db/
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm install --frozen-lockfile --filter "@sema/api..."
+
+# ── build ─────────────────────────────────────────────────────────────────────
+FROM deps AS build
+COPY tsconfig.base.json turbo.json ./
+COPY packages ./packages
+COPY apps/api ./apps/api
+# `@sema/api...` builds the API and everything it depends on, in order.
+RUN pnpm --filter @sema/api... run build
+
+# ── runtime ───────────────────────────────────────────────────────────────────
+FROM base AS runtime
+ENV NODE_ENV=production
+# Fly/Railway inject PORT; API_PORT is what the app reads.
+ENV API_PORT=3001
+ENV API_HOST=0.0.0.0
+
+COPY --from=build --chown=node:node /app /app
+
+USER node
+EXPOSE 3001
+
+# Liveness only — deliberately does not touch Postgres or Redis, so a slow
+# dependency cannot trigger a restart loop.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+  CMD node -e "fetch('http://127.0.0.1:'+(process.env.API_PORT||3001)+'/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+
+CMD ["node", "apps/api/dist/server.js"]

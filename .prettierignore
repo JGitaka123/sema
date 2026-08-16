@@ -1,0 +1,11 @@
+node_modules
+dist
+.next
+.turbo
+coverage
+pnpm-lock.yaml
+
+# The spec package is the founder's source of truth and is edited by hand.
+# Reformatting it would bury real changes in whitespace diffs.
+docs
+CLAUDE.md
