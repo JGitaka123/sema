@@ -23,6 +23,16 @@ describe("newId", () => {
     const prefixes = Object.values(ID_PREFIXES);
     expect(new Set(prefixes).size).toBe(prefixes.length);
   });
+
+  it("has no prefix that is itself a prefix of another", () => {
+    const prefixes: string[] = Object.values(ID_PREFIXES);
+    for (const a of prefixes) {
+      for (const b of prefixes) {
+        if (a === b) continue;
+        expect(`${b}_`.startsWith(`${a}_`)).toBe(false);
+      }
+    }
+  });
 });
 
 describe("isId", () => {
