@@ -1,0 +1,15 @@
+# Normalise to LF in the repository. Development happens on Windows, but CI,
+# the Docker images and the Postgres init scripts all run on Linux, where a
+# CRLF shebang line silently breaks a script.
+* text=auto eol=lf
+
+# Never rewrite these.
+*.png binary
+*.jpg binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.pdf binary
+
+# Generated — collapse in diffs and reviews.
+pnpm-lock.yaml linguist-generated=true -diff

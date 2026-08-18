@@ -1,0 +1,46 @@
+name: sema
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: sema-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: sema
+      POSTGRES_PASSWORD: sema
+      POSTGRES_DB: sema
+      # Deterministic collation so slot ordering and citext behave the same
+      # locally as on managed Postgres.
+      POSTGRES_INITDB_ARGS: "--locale=C --encoding=UTF8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - sema-pgdata:/var/lib/postgresql/data
+      # Runs once, on an empty data volume, before the DB accepts connections.
+      - ./infra/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sema -d sema"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: sema-redis
+    restart: unless-stopped
+    # BullMQ requires keyspace eviction to be disabled; noeviction is the
+    # documented safe policy for job data.
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory-policy", "noeviction"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - sema-redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  sema-pgdata:
+  sema-redisdata:

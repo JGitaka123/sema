@@ -1,0 +1,42 @@
+# Sema worker — build context is the repo root:
+#   docker build -f infra/Dockerfile.worker -t sema-worker .
+#
+# Same shape as Dockerfile.api. The worker is deployed as a separate process
+# from the API so a slow model call or a Daraja timeout can never delay a
+# WhatsApp webhook ack (CLAUDE.md hard rule 6).
+
+FROM node:20-alpine AS base
+ENV PNPM_HOME=/pnpm
+ENV PATH=$PNPM_HOME:$PATH
+RUN corepack enable
+WORKDIR /app
+
+# ── deps ──────────────────────────────────────────────────────────────────────
+FROM base AS deps
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
+COPY apps/api/package.json ./apps/api/
+COPY apps/worker/package.json ./apps/worker/
+COPY apps/inbox/package.json ./apps/inbox/
+COPY packages/shared/package.json ./packages/shared/
+COPY packages/db/package.json ./packages/db/
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm install --frozen-lockfile --filter "@sema/worker..."
+
+# ── build ─────────────────────────────────────────────────────────────────────
+FROM deps AS build
+COPY tsconfig.base.json turbo.json ./
+COPY packages ./packages
+COPY apps/worker ./apps/worker
+RUN pnpm --filter @sema/worker... run build
+
+# ── runtime ───────────────────────────────────────────────────────────────────
+FROM base AS runtime
+ENV NODE_ENV=production
+
+COPY --from=build --chown=node:node /app /app
+
+USER node
+
+# No port and no HTTP health check: the worker's health is its queue lag,
+# reported to the inbox rather than to the platform.
+CMD ["node", "apps/worker/dist/index.js"]

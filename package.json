@@ -1,0 +1,38 @@
+{
+  "name": "sema",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Sema — AI front-desk for clinics on WhatsApp",
+  "packageManager": "pnpm@9.15.9",
+  "engines": {
+    "node": ">=20"
+  },
+  "type": "module",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:evals": "echo \"[sema] evals arrive in Phase 4 (packages/engine/evals)\" && exit 0",
+    "db:migrate": "pnpm --filter @sema/db run migrate",
+    "db:seed": "pnpm --filter @sema/db run seed",
+    "wa:simulate": "echo \"[sema] wa:simulate arrives in Phase 3\" && exit 0",
+    "mpesa:simulate": "echo \"[sema] mpesa:simulate arrives in Phase 6\" && exit 0",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.17.0",
+    "@types/node": "^20.17.10",
+    "eslint": "^9.17.0",
+    "eslint-config-prettier": "^9.1.0",
+    "husky": "^9.1.7",
+    "prettier": "^3.4.2",
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.18.1",
+    "vitest": "^2.1.8"
+  }
+}
