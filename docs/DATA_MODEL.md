@@ -155,3 +155,12 @@ create table encounter (id text primary key, clinic_id text not null, patient_id
 
 ## RLS test
 `packages/db/test/rls.test.ts` iterates `information_schema.tables`, asserts RLS enabled + policy present for every table with `clinic_id`, and runs a cross-tenant read that must return 0 rows.
+
+## Implementation notes (Phase 1)
+Implemented in `packages/db/src/schema`, created by `drizzle/0000_data_model.sql`. Deliberate deviations from the DDL sketch above:
+- **`slot_hold` exclusion predicate.** `where (expires_at > now())` cannot be created: Postgres requires an index predicate to be `IMMUTABLE` and `now()` is `STABLE`. The constraint is unconditional and expiry is a delete — the hold-expiry job removes expired rows, and `holdSlot()` clears that provider's expired holds inside the same transaction. The `appointment` predicate on `status` is created exactly as sketched.
+- **RLS on `clinic`.** The sketch mandates policies for tables with `clinic_id`; `clinic` gets one too, on its own `id`. Every policy carries `with check` as well as `using`, so a write cannot cross tenants either, and every such table is also `force row level security`.
+- **Every tenant table has `created_at`/`updated_at`** (per the preamble), including join and counter tables. `deleted_at` stays on `clinic` only.
+- **`clinic.kmpdc_licence_no`** added: COMPLIANCE.md §5 requires the licence number to be stored on the clinic.
+- Foreign keys were added where the sketch used a bare `text` id and the target is unambiguous (`time_off.provider_id`, `slot_hold.*`, `note.patient_id`/`conversation_id`). `note.appointment_id`, `encounter.*` and `appointment.encounter_id` stay unconstrained, to avoid an import cycle and Phase 3 coupling.
+- Roles (`sema_app`, `sema_system`) are environment setup, documented in `packages/db/README.md`, not created by migrations — managed Postgres providers differ on what a migration may do to roles.
