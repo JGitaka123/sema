@@ -4,6 +4,8 @@
   "safety.out_of_scope": "I am the front-desk assistant, so I cannot advise on symptoms or medication. What I can do is get you the earliest appointment with {provider}, or ask a nurse to call you. Which would you prefer?",
   "safety.abuse_warning": "I would like to keep helping you, but I need us to keep this respectful. Would you like me to connect you to a member of our team?",
 
+  "consent.ai_disclosure": "Messages here are handled by {clinic}'s assistant, which uses AI. A person from our team can take over at any time — just ask. Reply STOP to opt out. Privacy: {privacy_url}",
+
   "handover.in_hours": "Let me get a team member to help you with this. Someone will reply here shortly.",
   "handover.out_of_hours": "Our team is offline until {opens_at}. I have flagged your message so they see it first thing. If this is urgent, please call {clinic_phone}.",
   "handover.taken_over": "You are now chatting with our team.",

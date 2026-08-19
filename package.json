@@ -15,7 +15,7 @@
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "test:integration": "turbo run test:integration",
-    "test:evals": "echo \"[sema] evals arrive in Phase 4 (packages/engine/evals)\" && exit 0",
+    "test:evals": "pnpm --filter @sema/engine test:evals",
     "db:generate": "turbo run generate --filter @sema/db",
     "db:migrate": "turbo run migrate --filter @sema/db",
     "db:seed": "turbo run seed --filter @sema/db",
