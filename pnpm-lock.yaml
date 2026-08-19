@@ -145,6 +145,9 @@ importers:
       '@sema/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@sema/scheduling':
+        specifier: workspace:*
+        version: link:../../packages/scheduling
       '@sema/shared':
         specifier: workspace:*
         version: link:../../packages/shared
@@ -251,6 +254,31 @@ importers:
       tsx:
         specifier: ^4.19.2
         version: 4.23.12
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@20.19.43)
+
+  packages/scheduling:
+    dependencies:
+      '@sema/db':
+        specifier: workspace:*
+        version: link:../db
+      '@sema/shared':
+        specifier: workspace:*
+        version: link:../shared
+      date-fns:
+        specifier: ^4.1.0
+        version: 4.4.0
+      drizzle-orm:
+        specifier: ^0.38.3
+        version: 0.38.4(@types/pg@8.21.0)(@types/react@18.3.31)(pg@8.23.0)(react@18.3.1)
+    devDependencies:
+      '@types/node':
+        specifier: ^20.17.10
+        version: 20.19.43
       typescript:
         specifier: ^5.7.2
         version: 5.9.3

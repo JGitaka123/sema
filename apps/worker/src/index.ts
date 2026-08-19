@@ -3,6 +3,7 @@ import { pathToFileURL } from "node:url";
 import { type Worker } from "bullmq";
 import pino from "pino";
 
+import { HOLD_EXPIRY_JOB, registerHoldExpiry, runHoldExpiry } from "./jobs/hold-expiry.js";
 import { PROCESSORS } from "./jobs/index.js";
 import { ALL_QUEUE_NAMES, closeQueues, createWorker } from "./queues.js";
 
@@ -10,10 +11,10 @@ import { ALL_QUEUE_NAMES, closeQueues, createWorker } from "./queues.js";
  * Worker process entrypoint.
  *
  * Phase 0 registered a consumer per queue with a placeholder processor so the
- * wiring, logging and shutdown path were real and reviewable. Phase 3 supplies
- * the first real ones — `inbound` and `outbox`, from `./jobs` — and the rest
- * keep the placeholder until their phase: payments in Phase 6, reminders in
- * Phase 7 (docs/BUILD_PLAN.md).
+ * wiring, logging and shutdown path were real and reviewable. Phase 2 supplies
+ * hold expiry on the `system` queue and Phase 3 `inbound` and `outbox` from
+ * `./jobs`; the rest keep the placeholder until their phase: payments in
+ * Phase 6, reminders in Phase 7 (docs/BUILD_PLAN.md).
  */
 const log = pino({
   level: process.env["LOG_LEVEL"] ?? "info",
@@ -32,10 +33,19 @@ export function startWorkers(): Worker[] {
       // Log the identity of the work, never its contents.
       log.info({ queue: name, jobName: job.name, jobId: job.id }, "job received");
 
-      if (!processor) return { ok: true };
+      // Hold expiry is addressed by job name on the shared `system` queue,
+      // not by a queue of its own, so it dispatches ahead of the per-queue map.
+      const handler =
+        job.name === HOLD_EXPIRY_JOB
+          ? runHoldExpiry
+          : processor
+            ? (): Promise<unknown> => Promise.resolve(processor(job, ""))
+            : undefined;
+
+      if (!handler) return { ok: true };
 
       try {
-        const result = await processor(job, "");
+        const result = await handler();
         log.info(
           // A job outcome is a status word, not patient data.
           { queue: name, jobName: job.name, jobId: job.id, outcome: outcomeOf(result) },
@@ -63,6 +73,7 @@ function outcomeOf(result: unknown): string | undefined {
 
 async function main(): Promise<void> {
   const workers = startWorkers();
+  await registerHoldExpiry();
   log.info({ queues: ALL_QUEUE_NAMES }, "worker started");
 
   const shutdown = (signal: string): void => {
