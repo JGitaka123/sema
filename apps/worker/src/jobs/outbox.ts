@@ -51,6 +51,13 @@ export interface EnqueueOutboundParams {
   fallbackTemplate?: OutboxPayload["fallbackTemplate"];
   /** `agent` | `system` | `staff:<staff_user id>` (DATA_MODEL: `message.sent_by`). */
   sentBy: string;
+  /**
+   * `message.meta`. The engine stamps `prompt_version` here
+   * (CONVERSATION_ENGINE.md §10) so a reply can always be traced to the prompt
+   * that produced it. Must stay PHI-free — it is read by the inbox and by
+   * anyone auditing a conversation.
+   */
+  meta?: Record<string, unknown>;
 }
 
 export interface EnqueuedOutbound {
@@ -106,8 +113,8 @@ export async function enqueueOutbound(
 
   await client.query(
     `insert into message
-       (id, clinic_id, conversation_id, direction, kind, body, status, sent_by, template_name, at)
-     values ($1, $2, $3, 'out', $4, $5, 'queued', $6, $7, now())`,
+       (id, clinic_id, conversation_id, direction, kind, body, status, sent_by, template_name, meta, at)
+     values ($1, $2, $3, 'out', $4, $5, 'queued', $6, $7, $8::jsonb, now())`,
     [
       messageId,
       params.clinicId,
@@ -116,6 +123,7 @@ export async function enqueueOutbound(
       bodyOf(params.message),
       params.sentBy,
       params.message.kind === "template" ? params.message.templateName : null,
+      JSON.stringify(params.meta ?? {}),
     ],
   );
 

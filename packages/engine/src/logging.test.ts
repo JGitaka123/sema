@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 
+import { agentLogFields, runAgent } from "./agent.js";
 import { classifierLogFields, routeLogFields } from "./logging.js";
 import type { ClinicScriptConfig } from "./replies.js";
 import { route } from "./router.js";
 import { matchSafetyLexicon } from "./safety/index.js";
+import { fakeModelClient, stubScheduler, testAgentDeps, testContext } from "./testing.js";
 import type { ClassifierResult } from "./types.js";
 
 /**
@@ -96,6 +98,69 @@ describe("routeLogFields", () => {
     // content, not log content.
     expect(serialised).not.toContain("999");
     expect(serialised).not.toContain("Afyanex");
+  });
+});
+
+describe("agent audit metadata", () => {
+  /**
+   * The agent writes far more audit rows than the router does, and every one of
+   * them is assembled from strings the model chose. This walks a whole run and
+   * greps every row — hard rule 4 and hard rule 7 have to hold together, or the
+   * audit trail becomes the PHI leak.
+   */
+  it("carries no patient text through a full agent run", async () => {
+    const scheduler = stubScheduler({
+      searchSlots: () => ({ slots: [], total: 0, timezone: "Africa/Nairobi" }),
+    });
+    const client = fakeModelClient({
+      turns: [
+        {
+          toolCalls: [
+            {
+              name: "search_slots",
+              input: {
+                service_id: "svc_00000000000000000000000001",
+                from: "2026-08-21T08:00:00+03:00",
+                to: "2026-08-21T17:00:00+03:00",
+              },
+            },
+            { name: "add_note", input: { body: `${PHI.name} prefers mornings` } },
+          ],
+        },
+        { text: "Nothing free that day — shall I look at Monday?" },
+      ],
+    });
+    const deps = testAgentDeps(client, { scheduler });
+    const context = testContext();
+
+    const result = await runAgent(
+      {
+        clinicId: context.clinic.id,
+        conversationId: context.conversationId,
+        patientId: context.patient.id,
+        message: PHI.body,
+        context,
+        patientLanguage: "en",
+      },
+      deps,
+    );
+
+    expect(result.stopReason).toBe("replied");
+
+    // Every audit row written during the run, plus the log projection.
+    const auditRows = deps.db.inserts.filter((insert) => insert.table === "audit_log");
+    expect(auditRows.length).toBeGreaterThan(0);
+    assertNoPhi(JSON.stringify(auditRows));
+    assertNoPhi(JSON.stringify(agentLogFields(result)));
+    // The audit row for a note records its length, never its text.
+    expect(JSON.stringify(auditRows)).not.toContain("prefers mornings");
+
+    // The `note` row itself is the one place the text belongs: it is the
+    // clinical record staff will read at the desk, not a log line. Hard rule 4
+    // is about logs, analytics and error tracking — asserting it here would be
+    // asserting that the feature does not work.
+    const noteRow = deps.db.inserts.find((insert) => insert.table === "note");
+    expect(JSON.stringify(noteRow)).toContain("prefers mornings");
   });
 });
 

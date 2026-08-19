@@ -1,0 +1,58 @@
+{"id": "lg-001", "lang": "en", "text": "Hi, what time do you open on Saturday?", "expect_language": "en", "tags": ["hours"]}
+{"id": "lg-002", "lang": "en", "text": "Can I book an appointment for Thursday please", "expect_language": "en", "tags": ["booking"]}
+{"id": "lg-003", "lang": "en", "text": "How much is a dental cleaning?", "expect_language": "en", "tags": ["pricing"]}
+{"id": "lg-004", "lang": "en", "text": "Where exactly are you located?", "expect_language": "en", "tags": ["location"]}
+{"id": "lg-005", "lang": "en", "text": "I need to cancel my appointment tomorrow", "expect_language": "en", "tags": ["cancel"]}
+{"id": "lg-006", "lang": "en", "text": "Do you accept insurance?", "expect_language": "en", "tags": ["insurance"]}
+{"id": "lg-007", "lang": "en", "text": "Thanks very much, see you then", "expect_language": "en", "tags": ["thanks"]}
+{"id": "lg-008", "lang": "en", "text": "Good morning, is the doctor in today?", "expect_language": "en", "tags": ["greeting"]}
+{"id": "lg-009", "lang": "en", "text": "I'd like to move my booking to next week", "expect_language": "en", "tags": ["reschedule"]}
+{"id": "lg-010", "lang": "en", "text": "What should I bring for the antenatal visit?", "expect_language": "en", "tags": ["prep"]}
+{"id": "lg-011", "lang": "en", "text": "Sorry for the late reply, is Friday still free?", "expect_language": "en", "tags": ["booking"]}
+{"id": "lg-012", "lang": "en", "text": "Can someone call me back please", "expect_language": "en", "tags": ["human"]}
+{"id": "lg-013", "lang": "sw", "text": "Habari, mnafunguliwa saa ngapi Jumamosi?", "expect_language": "sw", "tags": ["hours"]}
+{"id": "lg-014", "lang": "sw", "text": "Naomba kuweka miadi Alhamisi tafadhali", "expect_language": "sw", "tags": ["booking"]}
+{"id": "lg-015", "lang": "sw", "text": "Bei ya kusafisha meno ni ngapi?", "expect_language": "sw", "tags": ["pricing"]}
+{"id": "lg-016", "lang": "sw", "text": "Mko wapi hasa?", "expect_language": "sw", "tags": ["location"]}
+{"id": "lg-017", "lang": "sw", "text": "Nataka kufuta miadi yangu ya kesho", "expect_language": "sw", "tags": ["cancel"]}
+{"id": "lg-018", "lang": "sw", "text": "Mnakubali bima?", "expect_language": "sw", "tags": ["insurance"]}
+{"id": "lg-019", "lang": "sw", "text": "Asante sana, tutaonana", "expect_language": "sw", "tags": ["thanks"]}
+{"id": "lg-020", "lang": "sw", "text": "Habari za asubuhi, daktari yupo leo?", "expect_language": "sw", "tags": ["greeting"]}
+{"id": "lg-021", "lang": "sw", "text": "Naomba kuhamisha miadi yangu wiki ijayo", "expect_language": "sw", "tags": ["reschedule"]}
+{"id": "lg-022", "lang": "sw", "text": "Nilete nini kwa kliniki ya wajawazito?", "expect_language": "sw", "tags": ["prep"]}
+{"id": "lg-023", "lang": "sw", "text": "Samahani kwa kuchelewa kujibu, Ijumaa bado iko wazi?", "expect_language": "sw", "tags": ["booking"]}
+{"id": "lg-024", "lang": "sw", "text": "Naomba mtu anipigie simu", "expect_language": "sw", "tags": ["human"]}
+{"id": "lg-025", "lang": "sw", "text": "Je, mnafunguliwa Jumapili?", "expect_language": "sw", "tags": ["hours"]}
+{"id": "lg-026", "lang": "sw", "text": "Nataka kuona daktari wa meno wiki hii", "expect_language": "sw", "tags": ["booking"]}
+{"id": "lg-027", "lang": "sheng", "text": "Niaje, mnafunguliwa saa ngapi Sato?", "expect_language": "sw", "tags": ["hours", "sheng"]}
+{"id": "lg-028", "lang": "sheng", "text": "Nataka kubook appointment Alhamisi", "expect_language": "sw", "tags": ["booking", "sheng"]}
+{"id": "lg-029", "lang": "sheng", "text": "Cleaning ya meno iko ngapi?", "expect_language": "sw", "tags": ["pricing", "sheng"]}
+{"id": "lg-030", "lang": "sheng", "text": "Mko wapi? Nitumie location", "expect_language": "sw", "tags": ["location", "sheng"]}
+{"id": "lg-031", "lang": "sheng", "text": "Nataka kucancel ya kesho", "expect_language": "sw", "tags": ["cancel", "sheng"]}
+{"id": "lg-032", "lang": "sheng", "text": "Mnakubali insurance ya kazi?", "expect_language": "sw", "tags": ["insurance", "sheng"]}
+{"id": "lg-033", "lang": "sheng", "text": "Asee poa sana, tutaonana", "expect_language": "sw", "tags": ["thanks", "sheng"]}
+{"id": "lg-034", "lang": "sheng", "text": "Sasa, daktari yuko leo?", "expect_language": "sw", "tags": ["greeting", "sheng"]}
+{"id": "lg-035", "lang": "sheng", "text": "Nishukishe hii booking iende wiki ingine", "expect_language": "sw", "tags": ["reschedule", "sheng"]}
+{"id": "lg-036", "lang": "sheng", "text": "Nibebe nini nikikuja kwa antenatal?", "expect_language": "sw", "tags": ["prep", "sheng"]}
+{"id": "lg-037", "lang": "sheng", "text": "Boss, kuna slot leo jioni?", "expect_language": "sw", "tags": ["booking", "sheng"]}
+{"id": "lg-038", "lang": "sheng", "text": "Nataka kuongea na mtu si bot", "expect_language": "sw", "tags": ["human", "sheng"]}
+{"id": "lg-039", "lang": "mixed", "text": "Hi, naomba appointment ya dentist Friday", "expect_language": "any", "tags": ["booking", "mixed"]}
+{"id": "lg-040", "lang": "mixed", "text": "Habari, how much for a GP consultation?", "expect_language": "any", "tags": ["pricing", "mixed"]}
+{"id": "lg-041", "lang": "mixed", "text": "Sawa, can you book me for Thursday morning?", "expect_language": "any", "tags": ["booking", "mixed"]}
+{"id": "lg-042", "lang": "mixed", "text": "Asante, see you tomorrow", "expect_language": "any", "tags": ["thanks", "mixed"]}
+{"id": "lg-043", "lang": "mixed", "text": "Nataka kucancel, can you help?", "expect_language": "any", "tags": ["cancel", "mixed"]}
+{"id": "lg-044", "lang": "mixed", "text": "Mko open Saturday? I want to come in the morning", "expect_language": "any", "tags": ["hours", "mixed"]}
+{"id": "lg-045", "lang": "mixed", "text": "Please nitumie location yenu", "expect_language": "any", "tags": ["location", "mixed"]}
+{"id": "lg-046", "lang": "mixed", "text": "Bei ya cleaning ni how much?", "expect_language": "any", "tags": ["pricing", "mixed"]}
+{"id": "lg-047", "lang": "en", "text": "Habari. Actually let me write in English — can I book for Friday?", "expect_language": "en", "tags": ["switch", "booking"]}
+{"id": "lg-048", "lang": "sw", "text": "Hi there. Kwa kweli niandike Kiswahili — naomba miadi Ijumaa", "expect_language": "sw", "tags": ["switch", "booking"]}
+{"id": "lg-049", "lang": "sheng", "text": "I was speaking English before but wacha nitumie sheng, kuna slot leo?", "expect_language": "sw", "tags": ["switch", "booking"]}
+{"id": "lg-050", "lang": "sw", "text": "Ningependa kufanya miadi na daktari tafadhali", "expect_language": "sw", "tags": ["formal"]}
+{"id": "lg-051", "lang": "sheng", "text": "Manze niwekee slot ya daktari haraka", "expect_language": "sw", "tags": ["casual"]}
+{"id": "lg-052", "lang": "en", "text": "I would be grateful if you could arrange an appointment", "expect_language": "en", "tags": ["formal"]}
+{"id": "lg-053", "lang": "en", "text": "yo can i get a slot today", "expect_language": "en", "tags": ["casual"]}
+{"id": "lg-054", "lang": "en", "text": "wat time do u open sat", "expect_language": "en", "tags": ["typo", "hours"]}
+{"id": "lg-055", "lang": "sw", "text": "mnafungulwa saa ngap jumamos", "expect_language": "sw", "tags": ["typo", "hours"]}
+{"id": "lg-056", "lang": "sheng", "text": "niaje boss kuna slot leo jionii", "expect_language": "sw", "tags": ["typo", "booking"]}
+{"id": "lg-057", "lang": "en", "text": "this is a voice note sorry, I want to book for thursday morning please", "expect_language": "en", "tags": ["transcript", "booking"]}
+{"id": "lg-058", "lang": "sw", "text": "hii ni ujumbe wa sauti, naomba miadi siku ya alhamisi asubuhi", "expect_language": "sw", "tags": ["transcript", "booking"]}

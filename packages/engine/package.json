@@ -26,6 +26,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.118.0",
     "@sema/db": "workspace:*",
+    "@sema/scheduling": "workspace:*",
     "@sema/shared": "workspace:*",
     "drizzle-orm": "^0.38.3",
     "zod": "^3.24.1"
