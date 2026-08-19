@@ -1,0 +1,40 @@
+{
+  "object": "whatsapp_business_account",
+  "entry": [
+    {
+      "id": "100000000000001",
+      "changes": [
+        {
+          "field": "messages",
+          "value": {
+            "messaging_product": "whatsapp",
+            "metadata": {
+              "display_phone_number": "254709000100",
+              "phone_number_id": "100000000000002"
+            },
+            "contacts": [
+              {
+                "profile": { "name": "Brian Otieno" },
+                "wa_id": "254712000002"
+              }
+            ],
+            "messages": [
+              {
+                "from": "254712000002",
+                "id": "wamid.HBgMMjU0NzEyMDAwMDAyFQIAEhggN0EwMDAwMDAwMDAwMDAwMgA=",
+                "timestamp": "1787059260",
+                "type": "audio",
+                "audio": {
+                  "id": "980000000000001",
+                  "mime_type": "audio/ogg; codecs=opus",
+                  "sha256": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+                  "voice": true
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

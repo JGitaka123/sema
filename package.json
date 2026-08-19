@@ -19,7 +19,7 @@
     "db:generate": "turbo run generate --filter @sema/db",
     "db:migrate": "turbo run migrate --filter @sema/db",
     "db:seed": "turbo run seed --filter @sema/db",
-    "wa:simulate": "echo \"[sema] wa:simulate arrives in Phase 3\" && exit 0",
+    "wa:simulate": "pnpm --filter @sema/api run wa:simulate",
     "mpesa:simulate": "echo \"[sema] mpesa:simulate arrives in Phase 6\" && exit 0",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

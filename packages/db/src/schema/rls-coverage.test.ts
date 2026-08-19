@@ -119,6 +119,8 @@ describe("schema shape", () => {
         "audit_log",
         "availability_rule",
         "clinic",
+        // Phase 3 (INTEGRATIONS.md §1): the connected WhatsApp sender.
+        "clinic_whatsapp",
         "conversation",
         "encounter",
         "escalation",
