@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 
 import type { AvailabilityWindow } from "./availability.js";
-import { alignToGrid, bookingHorizon, generateSlots, type SlotGenerationConfig } from "./slots.js";
+import {
+  alignToGrid,
+  bookingHorizon,
+  generateSlots,
+  isBlocked,
+  type SlotGenerationConfig,
+} from "./slots.js";
 import type { BusyInterval } from "./types.js";
 
 const NAIROBI = "Africa/Nairobi";
@@ -234,5 +240,58 @@ describe("generateSlots", () => {
 
   it("returns nothing when there is no availability", () => {
     expect(run({}, [], [])).toEqual([]);
+  });
+});
+
+/**
+ * The split `holdSlot` leans on to tell a lost race from a bad request.
+ *
+ * Generating with no occupancy answers "would this clinic ever offer this
+ * time?"; `isBlocked` answers "is it free?". Keeping the two separable is what
+ * lets the write path raise `SLOT_UNAVAILABLE` rather than `VALIDATION_FAILED`
+ * when a competing transaction got there first.
+ */
+describe("occupancy is separable from availability", () => {
+  const busy: BusyInterval[] = [
+    {
+      providerId: PROVIDER,
+      kind: "hold",
+      start: at("2030-01-07T06:00:00Z"),
+      end: at("2030-01-07T06:30:00Z"),
+    },
+  ];
+
+  it("still generates a merely-taken slot when asked with an empty busy list", () => {
+    expect(run({ durationMin: 30, granularityMin: 30 }, busy)).not.toContain(
+      "2030-01-07T06:00:00.000Z",
+    );
+    expect(run({ durationMin: 30, granularityMin: 30 }, [])).toContain("2030-01-07T06:00:00.000Z");
+  });
+
+  it("agrees with generateSlots about what is blocked", () => {
+    const block = { start: at("2030-01-07T06:00:00Z"), end: at("2030-01-07T06:30:00Z") };
+    expect(isBlocked(busy, PROVIDER, block)).toBe(true);
+    // Half open, so the abutting block is free.
+    expect(
+      isBlocked(busy, PROVIDER, {
+        start: at("2030-01-07T06:30:00Z"),
+        end: at("2030-01-07T07:00:00Z"),
+      }),
+    ).toBe(false);
+    expect(isBlocked(busy, "prv_other", block)).toBe(false);
+  });
+
+  it("treats a clinic-wide closure as blocking every provider", () => {
+    const closure: BusyInterval[] = [
+      {
+        providerId: null,
+        kind: "time_off",
+        start: at("2030-01-07T00:00:00Z"),
+        end: at("2030-01-08T00:00:00Z"),
+      },
+    ];
+    const block = { start: at("2030-01-07T06:00:00Z"), end: at("2030-01-07T06:30:00Z") };
+    expect(isBlocked(closure, PROVIDER, block)).toBe(true);
+    expect(isBlocked(closure, "prv_other", block)).toBe(true);
   });
 });

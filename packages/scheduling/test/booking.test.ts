@@ -102,7 +102,15 @@ describeDb("book", () => {
     expect(audit[0]?.actor).toBe("staff:usr_desk");
   });
 
-  it("refuses an expired hold and clears it", async () => {
+  /**
+   * The cleanup has to survive the failure. `book` deletes the expired hold
+   * and then reports `HOLD_EXPIRED`; raising that error from *inside* the
+   * transaction would roll the delete back with it, leaving a dead row to go
+   * on blocking its slot through the unconditional exclusion constraint until
+   * the next sweep. Re-holding the same slot afterwards is what proves the
+   * delete committed.
+   */
+  it("refuses an expired hold, clears it, and frees the slot immediately", async () => {
     const stale = await createSchedulingTenant(h, "book-stale");
     const holdId = await insertExpiredHold(h, stale, MONDAY_0900, 20);
 
@@ -110,6 +118,15 @@ describeDb("book", () => {
       stale.scheduler.book({ clinicId: stale.clinicId, holdId, patientId: stale.patientId }),
     ).rejects.toMatchObject({ code: "HOLD_EXPIRED" });
     expect(await countHolds(h, stale.clinicId)).toBe(0);
+
+    const fresh = await stale.scheduler.holdSlot({
+      clinicId: stale.clinicId,
+      providerId: stale.providerId,
+      serviceId: stale.serviceId,
+      start: MONDAY_0900,
+      patientId: stale.patientId,
+    });
+    expect(fresh.start.toISOString()).toBe(MONDAY_0900.toISOString());
   });
 
   it("refuses a hold that never existed", async () => {
@@ -250,6 +267,29 @@ describeDb("reschedule", () => {
     // Deposit satisfied, so the new appointment does not go back to
     // pending_deposit.
     expect(moved.appointment.status).toBe("booked");
+  });
+
+  /** The same cleanup-must-commit rule as `book`, on the reschedule path. */
+  it("refuses an expired new hold, clears it, and leaves the appointment alone", async () => {
+    const t = await createSchedulingTenant(h, "resched-stale");
+    const original = await t.scheduler.book({
+      clinicId: t.clinicId,
+      holdId: await hold(t, 0),
+      patientId: t.patientId,
+    });
+    const staleHoldId = await insertExpiredHold(h, t, minutesAfter(MONDAY_0900, 120), 20);
+
+    await expect(
+      t.scheduler.reschedule({
+        clinicId: t.clinicId,
+        appointmentId: original.appointment.id,
+        newHoldId: staleHoldId,
+        actor: { kind: "patient" },
+      }),
+    ).rejects.toMatchObject({ code: "HOLD_EXPIRED" });
+
+    expect(await appointmentStatus(h, t.clinicId, original.appointment.id)).toBe("booked");
+    expect(await countHolds(h, t.clinicId)).toBe(0);
   });
 
   it("refuses to move a hold for a different service", async () => {

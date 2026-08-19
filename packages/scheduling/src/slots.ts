@@ -64,7 +64,23 @@ export function alignToGrid(instant: Date, timezone: TimeZone, granularityMin: n
   return delta === 0 ? truncated : addMinutes(truncated, delta);
 }
 
-function blocked(busy: readonly BusyInterval[], providerId: string, block: Interval): boolean {
+/**
+ * Is `block` occupied for `providerId`?
+ *
+ * A busy interval with a `null` provider is a clinic-wide closure and blocks
+ * everyone.
+ *
+ * Exported because the write path has to ask this question on its own:
+ * `holdSlot` must tell "the clinic would never offer this time" (the caller
+ * sent something wrong) apart from "this time is offerable but taken" (the
+ * caller lost a race). Collapsing those into one error code is what made a
+ * losing racer look like a malformed request.
+ */
+export function isBlocked(
+  busy: readonly BusyInterval[],
+  providerId: string,
+  block: Interval,
+): boolean {
   return busy.some(
     (b) => (b.providerId === null || b.providerId === providerId) && overlaps(b, block),
   );
@@ -112,7 +128,7 @@ export function generateSlots(input: {
       if (start < earliest) continue;
 
       const blockEnd = addMinutes(end, config.bufferMin);
-      if (blocked(busy, window.providerId, { start, end: blockEnd })) continue;
+      if (isBlocked(busy, window.providerId, { start, end: blockEnd })) continue;
 
       slots.push({
         providerId: window.providerId,
