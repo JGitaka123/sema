@@ -1,10 +1,17 @@
 import { InboundJobData, StatusJobData } from "@sema/channels";
-import { getPool, withTenant } from "@sema/db";
-import { AppError, JOB_NAMES, isId } from "@sema/shared";
+import { createWithTenantDb, getPool, withTenant } from "@sema/db";
+import {
+  createAnthropicClient,
+  createClassifierCache,
+  recordingDepositRequester,
+} from "@sema/engine";
+import { createScheduler } from "@sema/scheduling";
+import { AppError, JOB_NAMES, isId, systemClock } from "@sema/shared";
 import type { Job, Processor } from "bullmq";
 import { z } from "zod";
 
 import { QUEUE_NAMES, type QueueName } from "../queues.js";
+import { handleInbound, type EngineDeps } from "./engine.js";
 import { deliverOutbox, type DeliverOutcome } from "./outbox.js";
 import { processInboundMessage, processStatusUpdate, type InboundDeps } from "./inbound.js";
 
@@ -17,18 +24,52 @@ import { processInboundMessage, processStatusUpdate, type InboundDeps } from "./
  * ones and validates what came off the queue.
  */
 
+/**
+ * The engine's dependencies, built once per process.
+ *
+ * Lazily, and cached: importing this module must not open a Postgres pool or
+ * require `ANTHROPIC_API_KEY`, so a build, a `--help` or a unit test of another
+ * job never needs either.
+ */
+let engineDeps: EngineDeps | undefined;
+
+function getEngineDeps(): EngineDeps {
+  if (!engineDeps) {
+    const withTenantDb = createWithTenantDb(getPool());
+    engineDeps = {
+      executor: getPool(),
+      withTenant,
+      withTenantDb,
+      client: createAnthropicClient(),
+      scheduler: createScheduler({ withTenantDb, clock: systemClock }),
+      // Phase 6 swaps this for the Daraja-backed requester. Until then the
+      // agent records the intent and no money moves (see tools/deposit.ts).
+      depositRequester: recordingDepositRequester({ withTenantDb }),
+      cache: createClassifierCache(),
+    };
+  }
+  return engineDeps;
+}
+
 /** Production wiring: the app pool plus tenant-scoped transactions. */
 function inboundDeps(): InboundDeps {
   return {
     executor: getPool(),
     withTenant,
     /**
-     * Phase 4 plugs the classifier and router in here (BUILD_PLAN.md). Until
-     * then an inbound message is persisted and nothing replies — which is the
-     * correct behaviour for a phase with no engine, not an oversight.
+     * The Phase 4/5 seam, now filled: classify → route → scripted replies or
+     * the agent → guardrails → outbox. `inbound.ts` only calls this when a
+     * human is not in control (hard rule 3).
      */
-    // onPersisted: engine.handle,
+    onPersisted: async (persisted) => {
+      await handleInbound(persisted, getEngineDeps());
+    },
   };
+}
+
+/** Test seam: drop the cached dependencies. */
+export function resetEngineDeps(): void {
+  engineDeps = undefined;
 }
 
 const OutboxJobData = z.object({

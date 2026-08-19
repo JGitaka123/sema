@@ -16,6 +16,7 @@
   "dependencies": {
     "@sema/channels": "workspace:*",
     "@sema/db": "workspace:*",
+    "@sema/engine": "workspace:*",
     "@sema/scheduling": "workspace:*",
     "@sema/shared": "workspace:*",
     "bullmq": "^5.34.4",

@@ -1,13 +1,11 @@
 /**
  * `@sema/engine` — the conversation engine (docs/CONVERSATION_ENGINE.md).
  *
- * Phase 4 ships the first half of the pipeline: the safety lexicon, the
- * classifier, the router and the scripted safety replies. The agent, its
- * tools and the guardrail post-check are Phase 5 and are deliberately absent —
- * the seams they attach to are `RouteDecision.runAgent` and
- * `RouteDecision.agentAddendum`.
+ * The whole pipeline now lives here: the safety lexicon and classifier
+ * (Phase 4), then the router, the agent with its tools, and the guardrail
+ * post-check (Phase 5).
  *
- * ## Wiring it in (Phase 5's job, not this package's)
+ * ## Wiring it in
  *
  * ```ts
  * const classification = await classify(
@@ -17,25 +15,30 @@
  * const decision = route({ classification, clinic, conversation, now });
  *
  * await recordRouteAudit({ clinicId, conversationId, entry: decision.audit }, deps);
- * if (decision.escalation) {
- *   await recordEscalation(
- *     { clinicId, conversationId, request: decision.escalation, classification },
- *     deps,
- *   );
+ * if (decision.escalation) await recordEscalation(…, deps);
+ * for (const reply of decision.replies) enqueueOutbound(reply);   // never send directly
+ *
+ * if (decision.runAgent) {
+ *   const context = await loadAgentContext({ withTenantDb }, ids);
+ *   const run = await runAgent({ …ids, message, context, patientLanguage }, agentDeps);
+ *   for (const reply of run.replies) enqueueOutbound(reply);
+ *   if (run.escalation) await recordEscalation(…);
  * }
- * for (const reply of decision.replies) enqueueOutbox(reply);   // never send directly
- * if (decision.runAgent) await runAgent(...);                   // Phase 5
  * ```
  *
- * Two rules the caller cannot opt out of: `classify` runs on **every** inbound
- * message before any other model call (hard rule 1), and the agent runs only
- * when `decision.runAgent` is true.
+ * Three rules the caller cannot opt out of: `classify` runs on **every**
+ * inbound message before any other model call (hard rule 1); the agent runs
+ * only when `decision.runAgent` is true; and every reply the agent produces has
+ * already been through `checkReply` — `runAgent` never returns unchecked text.
  */
 
+export * from "./agent.js";
 export * from "./cache.js";
 export * from "./classifier.js";
 export * from "./client.js";
+export * from "./context.js";
 export * from "./escalation.js";
+export * from "./guardrails.js";
 export * from "./language.js";
 export * from "./logging.js";
 export * from "./models.js";
@@ -43,5 +46,13 @@ export * from "./notifier.js";
 export * from "./replies.js";
 export * from "./router.js";
 export * from "./safety/index.js";
+export * from "./summaries.js";
+export * from "./tools/index.js";
 export * from "./types.js";
-export { PROMPT_VERSION, classifierSystemPrompt } from "./prompts/index.js";
+export {
+  AGENT_PROMPT_VERSION,
+  GUARDRAIL_PROMPT_VERSION,
+  PROMPT_VERSION,
+  SUMMARY_PROMPT_VERSION,
+  classifierSystemPrompt,
+} from "./prompts/index.js";

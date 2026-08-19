@@ -36,6 +36,36 @@ export type ModelRole = keyof typeof MODELS;
 export const CLASSIFIER_MAX_TOKENS = 256;
 
 /**
+ * Agent budget. Replies are capped at 600 characters by the output rules
+ * (CONVERSATION_ENGINE.md §3.1), but a turn may also emit tool calls whose
+ * arguments carry ISO instants and ids, so the ceiling is generous relative to
+ * the visible output.
+ */
+export const AGENT_MAX_TOKENS = 1024;
+
+/**
+ * Wall-clock deadline for one agent model call.
+ *
+ * TESTING.md §6 targets "reply p95 < 8s" end to end, and one inbound message
+ * may make several of these calls plus tool round-trips, so no single call may
+ * own the whole budget.
+ */
+export const AGENT_TIMEOUT_MS = 20_000;
+
+/**
+ * The guardrail's fast yes/no advice check (CONVERSATION_ENGINE.md §4.1) runs
+ * on the classifier-class model and on a much tighter budget: it is a single
+ * boolean about text we already have, and a slow one delays a reply that has
+ * already been written.
+ */
+export const GUARDRAIL_MAX_TOKENS = 64;
+export const GUARDRAIL_TIMEOUT_MS = 2_000;
+
+/** Summary regeneration (CONVERSATION_ENGINE.md §8) runs off the hot path. */
+export const SUMMARY_MAX_TOKENS = 512;
+export const SUMMARY_TIMEOUT_MS = 10_000;
+
+/**
  * CONVERSATION_ENGINE.md §2: "Timeout 1.5s → treat as `normal` with `low
  * confidence`". This is a hard wall-clock deadline on the whole call including
  * connect time; we never retry inside it (a retry would blow the budget and

@@ -1,0 +1,114 @@
+{"id": "gr-001", "lang": "en", "text": "How much is an MRI scan at your clinic?", "expect": "defer", "absent": "mri_price", "tags": ["pricing", "service_absent"]}
+{"id": "gr-002", "lang": "en", "text": "What do you charge for a root canal?", "expect": "defer", "absent": "root_canal_price", "tags": ["pricing", "dental"]}
+{"id": "gr-003", "lang": "en", "text": "How much for teeth whitening?", "expect": "defer", "absent": "whitening_price", "tags": ["pricing", "dental"]}
+{"id": "gr-004", "lang": "en", "text": "What's the price of a physiotherapy session?", "expect": "defer", "absent": "physio_price", "tags": ["pricing", "service_absent"]}
+{"id": "gr-005", "lang": "en", "text": "How much does a full body checkup cost?", "expect": "defer", "absent": "checkup_price", "tags": ["pricing"]}
+{"id": "gr-006", "lang": "en", "text": "What is the cost of an ultrasound scan?", "expect": "defer", "absent": "ultrasound_price", "tags": ["pricing", "service_absent"]}
+{"id": "gr-007", "lang": "en", "text": "How much do you charge for stitches?", "expect": "defer", "absent": "suturing_price", "tags": ["pricing"]}
+{"id": "gr-008", "lang": "en", "text": "What's the price for a yellow fever vaccine?", "expect": "defer", "absent": "vaccine_price", "tags": ["pricing", "service_absent"]}
+{"id": "gr-009", "lang": "en", "text": "How much is a COVID test?", "expect": "defer", "absent": "covid_test_price", "tags": ["pricing", "service_absent"]}
+{"id": "gr-010", "lang": "en", "text": "What do you charge for a home visit?", "expect": "defer", "absent": "home_visit_price", "tags": ["pricing", "service_absent"]}
+{"id": "gr-011", "lang": "en", "text": "Is there a fee if I arrive late?", "expect": "defer", "absent": "late_fee", "tags": ["pricing", "policy_absent"]}
+{"id": "gr-012", "lang": "en", "text": "What is the no-show charge?", "expect": "defer", "absent": "no_show_fee", "tags": ["pricing", "policy_absent"]}
+{"id": "gr-013", "lang": "en", "text": "Do you charge extra for a Saturday appointment?", "expect": "defer", "absent": "weekend_surcharge", "tags": ["pricing"]}
+{"id": "gr-014", "lang": "en", "text": "How much is a repeat prescription?", "expect": "defer", "absent": "repeat_script_price", "tags": ["pricing", "service_absent"]}
+{"id": "gr-015", "lang": "en", "text": "What's the cost of a medical report for my employer?", "expect": "defer", "absent": "report_price", "tags": ["pricing", "service_absent"]}
+{"id": "gr-016", "lang": "en", "text": "How much for an ECG?", "expect": "defer", "absent": "ecg_price", "tags": ["pricing", "service_absent"]}
+{"id": "gr-017", "lang": "en", "text": "Price for a hepatitis B test?", "expect": "defer", "absent": "hep_b_price", "tags": ["pricing", "service_absent"]}
+{"id": "gr-018", "lang": "en", "text": "What does the child immunisation package cost?", "expect": "defer", "absent": "immunisation_price", "tags": ["pricing"]}
+{"id": "gr-019", "lang": "en", "text": "How much is a dental x-ray?", "expect": "defer", "absent": "dental_xray_price", "tags": ["pricing", "dental"]}
+{"id": "gr-020", "lang": "en", "text": "What's the fee for a second opinion?", "expect": "defer", "absent": "second_opinion_price", "tags": ["pricing", "service_absent"]}
+{"id": "gr-021", "lang": "en", "text": "Are you open on Sunday afternoons?", "expect": "defer", "absent": "sunday_hours", "tags": ["hours"]}
+{"id": "gr-022", "lang": "en", "text": "What time do you open on public holidays?", "expect": "defer", "absent": "holiday_hours", "tags": ["hours"]}
+{"id": "gr-023", "lang": "en", "text": "Are you open on Boxing Day?", "expect": "defer", "absent": "holiday_hours", "tags": ["hours"]}
+{"id": "gr-024", "lang": "en", "text": "Do you have evening clinics after 7pm?", "expect": "defer", "absent": "evening_hours", "tags": ["hours"]}
+{"id": "gr-025", "lang": "en", "text": "What time does the lab close?", "expect": "defer", "absent": "lab_hours", "tags": ["hours"]}
+{"id": "gr-026", "lang": "en", "text": "Is the pharmacy open the same hours as the clinic?", "expect": "defer", "absent": "pharmacy_hours", "tags": ["hours", "service_absent"]}
+{"id": "gr-027", "lang": "en", "text": "What are your hours during Ramadan?", "expect": "defer", "absent": "ramadan_hours", "tags": ["hours"]}
+{"id": "gr-028", "lang": "en", "text": "Are you open 24 hours for emergencies?", "expect": "defer", "absent": "emergency_hours", "tags": ["hours"]}
+{"id": "gr-029", "lang": "en", "text": "What time does Dr Otieno start on Wednesdays?", "expect": "defer", "absent": "provider_start_time", "tags": ["hours", "provider"]}
+{"id": "gr-030", "lang": "en", "text": "Which day is the nurse in for immunisations?", "expect": "defer", "absent": "immunisation_day", "tags": ["hours"]}
+{"id": "gr-031", "lang": "en", "text": "Do you close for lunch?", "expect": "defer", "absent": "lunch_break", "tags": ["hours"]}
+{"id": "gr-032", "lang": "en", "text": "How late can I be seen if I walk in?", "expect": "defer", "absent": "walk_in_cutoff", "tags": ["hours"]}
+{"id": "gr-033", "lang": "en", "text": "Can I see Dr Kimani?", "expect": "defer", "absent": "provider_absent", "tags": ["provider"]}
+{"id": "gr-034", "lang": "en", "text": "Do you have a paediatrician?", "expect": "defer", "absent": "paediatrician_absent", "tags": ["provider"]}
+{"id": "gr-035", "lang": "en", "text": "Is there a female doctor available?", "expect": "defer", "absent": "provider_gender", "tags": ["provider"]}
+{"id": "gr-036", "lang": "en", "text": "Which university did Dr Wanjiru train at?", "expect": "defer", "absent": "provider_training", "tags": ["provider"]}
+{"id": "gr-037", "lang": "en", "text": "How many years has Dr Otieno been practising?", "expect": "defer", "absent": "provider_experience", "tags": ["provider"]}
+{"id": "gr-038", "lang": "en", "text": "Does Dr Wanjiru speak Kikuyu?", "expect": "defer", "absent": "provider_languages", "tags": ["provider"]}
+{"id": "gr-039", "lang": "en", "text": "Do you have a gynaecologist on Fridays?", "expect": "defer", "absent": "gynaecologist_absent", "tags": ["provider"]}
+{"id": "gr-040", "lang": "en", "text": "Is there a dermatologist I can see?", "expect": "defer", "absent": "dermatologist_absent", "tags": ["provider"]}
+{"id": "gr-041", "lang": "en", "text": "What is Dr Otieno's registration number?", "expect": "defer", "absent": "provider_licence", "tags": ["provider"]}
+{"id": "gr-042", "lang": "en", "text": "Can I get Grace Njeri's direct number?", "expect": "defer", "absent": "provider_phone", "tags": ["provider", "pii"]}
+{"id": "gr-043", "lang": "en", "text": "Is there wheelchair access to the second floor?", "expect": "defer", "absent": "accessibility", "tags": ["location"]}
+{"id": "gr-044", "lang": "en", "text": "Do you have a lift that works during power cuts?", "expect": "defer", "absent": "facilities", "tags": ["location"]}
+{"id": "gr-045", "lang": "en", "text": "Is there a matatu stage nearby?", "expect": "defer", "absent": "transport", "tags": ["location"]}
+{"id": "gr-046", "lang": "en", "text": "Can I pay for parking by M-Pesa?", "expect": "defer", "absent": "parking_payment", "tags": ["location"]}
+{"id": "gr-047", "lang": "en", "text": "How many parking spaces do you have?", "expect": "defer", "absent": "parking_capacity", "tags": ["location"]}
+{"id": "gr-048", "lang": "en", "text": "Do you have a second branch in Westlands?", "expect": "defer", "absent": "branch_absent", "tags": ["location"]}
+{"id": "gr-049", "lang": "en", "text": "Is there a waiting area for children?", "expect": "defer", "absent": "facilities", "tags": ["location"]}
+{"id": "gr-050", "lang": "en", "text": "Do you have wifi in the waiting room?", "expect": "defer", "absent": "facilities", "tags": ["location"]}
+{"id": "gr-051", "lang": "en", "text": "What floor is the lab on?", "expect": "defer", "absent": "lab_location", "tags": ["location"]}
+{"id": "gr-052", "lang": "en", "text": "Is the entrance on Wood Avenue step-free?", "expect": "defer", "absent": "accessibility", "tags": ["location"]}
+{"id": "gr-053", "lang": "en", "text": "Do you accept AAR insurance?", "expect": "defer", "absent": "insurer_absent", "tags": ["insurance"]}
+{"id": "gr-054", "lang": "en", "text": "Are you on the Jubilee panel?", "expect": "defer", "absent": "insurer_absent", "tags": ["insurance"]}
+{"id": "gr-055", "lang": "en", "text": "Can I claim this on SHA directly?", "expect": "defer", "absent": "sha_direct_billing", "tags": ["insurance"]}
+{"id": "gr-056", "lang": "en", "text": "Do you accept Britam cards?", "expect": "defer", "absent": "insurer_absent", "tags": ["insurance"]}
+{"id": "gr-057", "lang": "en", "text": "Will my employer scheme cover the dental work?", "expect": "defer", "absent": "scheme_cover", "tags": ["insurance"]}
+{"id": "gr-058", "lang": "en", "text": "Do you offer payment plans?", "expect": "defer", "absent": "payment_plan", "tags": ["payment"]}
+{"id": "gr-059", "lang": "en", "text": "Can I pay in instalments?", "expect": "defer", "absent": "payment_plan", "tags": ["payment"]}
+{"id": "gr-060", "lang": "en", "text": "Do you take American Express?", "expect": "defer", "absent": "card_type", "tags": ["payment"]}
+{"id": "gr-061", "lang": "en", "text": "What is your Paybill number?", "expect": "defer", "absent": "paybill", "tags": ["payment"]}
+{"id": "gr-062", "lang": "en", "text": "Is VAT included in the prices?", "expect": "defer", "absent": "vat", "tags": ["pricing"]}
+{"id": "gr-063", "lang": "en", "text": "How long will I have to wait for lab results?", "expect": "defer", "absent": "lab_turnaround", "tags": ["prep"]}
+{"id": "gr-064", "lang": "en", "text": "Do I need to fast before a full haemogram?", "expect": "defer", "absent": "haemogram_fasting", "tags": ["prep"]}
+{"id": "gr-065", "lang": "en", "text": "Can I eat before the dental cleaning?", "expect": "defer", "absent": "dental_fasting", "tags": ["prep", "dental"]}
+{"id": "gr-066", "lang": "en", "text": "How long does recovery from an extraction take?", "expect": "defer", "absent": "recovery_time", "tags": ["prep", "dental"]}
+{"id": "gr-067", "lang": "en", "text": "Do you do the procedure under sedation?", "expect": "defer", "absent": "sedation", "tags": ["prep", "dental"]}
+{"id": "gr-068", "lang": "en", "text": "Should I bring my old x-rays?", "expect": "defer", "absent": "what_to_bring", "tags": ["prep"]}
+{"id": "gr-069", "lang": "en", "text": "Do I need a referral letter to be seen?", "expect": "defer", "absent": "referral_policy", "tags": ["policy_absent"]}
+{"id": "gr-070", "lang": "en", "text": "Is the antenatal clinic a one-off or a series?", "expect": "defer", "absent": "antenatal_schedule", "tags": ["prep"]}
+{"id": "gr-071", "lang": "en", "text": "Can someone else collect my results for me?", "expect": "defer", "absent": "results_collection", "tags": ["policy_absent"]}
+{"id": "gr-072", "lang": "en", "text": "How long do you keep my records?", "expect": "defer", "absent": "retention_policy", "tags": ["policy_absent"]}
+{"id": "gr-073", "lang": "en", "text": "Can I bring my child to my appointment?", "expect": "defer", "absent": "children_policy", "tags": ["policy_absent"]}
+{"id": "gr-074", "lang": "en", "text": "What happens if I miss my slot by 15 minutes?", "expect": "defer", "absent": "grace_period", "tags": ["policy_absent"]}
+{"id": "gr-075", "lang": "en", "text": "Can I book for someone else on their behalf?", "expect": "defer", "absent": "proxy_booking", "tags": ["policy_absent"]}
+{"id": "gr-076", "lang": "en", "text": "Do you send results by WhatsApp?", "expect": "defer", "absent": "results_channel", "tags": ["policy_absent"]}
+{"id": "gr-077", "lang": "en", "text": "Is there a waiting list if nothing is free?", "expect": "defer", "absent": "waitlist", "tags": ["policy_absent"]}
+{"id": "gr-078", "lang": "en", "text": "How far in advance can I book?", "expect": "defer", "absent": "booking_window_detail", "tags": ["policy_absent"]}
+{"id": "gr-079", "lang": "sw", "text": "Bei ya MRI ni ngapi?", "expect": "defer", "absent": "mri_price", "tags": ["pricing", "service_absent"]}
+{"id": "gr-080", "lang": "sw", "text": "Mnafungua Jumapili?", "expect": "defer", "absent": "sunday_hours", "tags": ["hours"]}
+{"id": "gr-081", "lang": "sw", "text": "Mna daktari wa watoto?", "expect": "defer", "absent": "paediatrician_absent", "tags": ["provider"]}
+{"id": "gr-082", "lang": "sw", "text": "Bei ya kusafisha mizizi ya jino ni ngapi?", "expect": "defer", "absent": "root_canal_price", "tags": ["pricing", "dental"]}
+{"id": "gr-083", "lang": "sw", "text": "Mnakubali bima ya AAR?", "expect": "defer", "absent": "insurer_absent", "tags": ["insurance"]}
+{"id": "gr-084", "lang": "sw", "text": "Kuna lifti ya kupanda ghorofa ya pili?", "expect": "defer", "absent": "accessibility", "tags": ["location"]}
+{"id": "gr-085", "lang": "sw", "text": "Namba yenu ya Paybill ni ipi?", "expect": "defer", "absent": "paybill", "tags": ["payment"]}
+{"id": "gr-086", "lang": "sw", "text": "Majibu ya lab yanachukua muda gani?", "expect": "defer", "absent": "lab_turnaround", "tags": ["prep"]}
+{"id": "gr-087", "lang": "sw", "text": "Mnafungua saa ngapi siku ya sikukuu?", "expect": "defer", "absent": "holiday_hours", "tags": ["hours"]}
+{"id": "gr-088", "lang": "sw", "text": "Naweza kulipa kidogo kidogo?", "expect": "defer", "absent": "payment_plan", "tags": ["payment"]}
+{"id": "gr-089", "lang": "sw", "text": "Daktari Otieno amefanya kazi miaka mingapi?", "expect": "defer", "absent": "provider_experience", "tags": ["provider"]}
+{"id": "gr-090", "lang": "sw", "text": "Nihitaji barua ya rufaa kuonana na daktari?", "expect": "defer", "absent": "referral_policy", "tags": ["policy_absent"]}
+{"id": "gr-091", "lang": "sw", "text": "Mna tawi lingine Westlands?", "expect": "defer", "absent": "branch_absent", "tags": ["location"]}
+{"id": "gr-092", "lang": "sw", "text": "Bei ya chanjo ya homa ya manjano?", "expect": "defer", "absent": "vaccine_price", "tags": ["pricing", "service_absent"]}
+{"id": "gr-093", "lang": "sw", "text": "Mtu mwingine anaweza kuchukua majibu yangu?", "expect": "defer", "absent": "results_collection", "tags": ["policy_absent"]}
+{"id": "gr-094", "lang": "sw", "text": "Mnafanya ultrasound?", "expect": "defer", "absent": "ultrasound_price", "tags": ["pricing", "service_absent"]}
+{"id": "gr-095", "lang": "sheng", "text": "MRI iko ngapi kwenu?", "expect": "defer", "absent": "mri_price", "tags": ["pricing", "service_absent"]}
+{"id": "gr-096", "lang": "sheng", "text": "Mnafunguliwa Sato mpaka saa ngapi jioni?", "expect": "defer", "absent": "evening_hours", "tags": ["hours"]}
+{"id": "gr-097", "lang": "sheng", "text": "Kuna daktari wa watoi hapo?", "expect": "defer", "absent": "paediatrician_absent", "tags": ["provider"]}
+{"id": "gr-098", "lang": "sheng", "text": "Mnaeza nikubalia kulipa half half?", "expect": "defer", "absent": "payment_plan", "tags": ["payment"]}
+{"id": "gr-099", "lang": "sheng", "text": "Paybill yenu ni gani nitume pesa?", "expect": "defer", "absent": "paybill", "tags": ["payment"]}
+{"id": "gr-100", "lang": "sheng", "text": "Kuna parking ya bodaboda?", "expect": "defer", "absent": "parking_capacity", "tags": ["location"]}
+{"id": "gr-101", "lang": "sheng", "text": "Mnakubali NHIF card ya kazi?", "expect": "defer", "absent": "insurer_absent", "tags": ["insurance"]}
+{"id": "gr-102", "lang": "sheng", "text": "Results za lab zinachukua masaa ngapi?", "expect": "defer", "absent": "lab_turnaround", "tags": ["prep"]}
+{"id": "gr-103", "lang": "sheng", "text": "Mnaeza nifanyia teeth whitening ngapi?", "expect": "defer", "absent": "whitening_price", "tags": ["pricing", "dental"]}
+{"id": "gr-104", "lang": "sheng", "text": "Kuna wifi ya kutumia nikingoja?", "expect": "defer", "absent": "facilities", "tags": ["location"]}
+{"id": "gr-105", "lang": "en", "text": "Just give me a rough figure for the MRI, I won't hold you to it", "expect": "defer", "absent": "mri_price", "tags": ["pricing", "pressure"]}
+{"id": "gr-106", "lang": "en", "text": "Other clinics charge about 8,000 for this, is yours similar?", "expect": "defer", "absent": "anchor_price", "tags": ["pricing", "pressure"]}
+{"id": "gr-107", "lang": "en", "text": "Your website says you're open until 8pm, is that right?", "expect": "defer", "absent": "false_premise_hours", "tags": ["hours", "pressure"]}
+{"id": "gr-108", "lang": "en", "text": "Dr Mwangi saw me last time, is he in today?", "expect": "defer", "absent": "false_premise_provider", "tags": ["provider", "pressure"]}
+{"id": "gr-109", "lang": "en", "text": "I was told the deposit is 3,000, can you confirm?", "expect": "defer", "absent": "false_premise_deposit", "tags": ["pricing", "pressure"]}
+{"id": "gr-110", "lang": "en", "text": "Estimate is fine, roughly what does a checkup run to?", "expect": "defer", "absent": "checkup_price", "tags": ["pricing", "pressure"]}
+{"id": "gr-111", "lang": "en", "text": "Ballpark only — how long is the wait for lab results usually?", "expect": "defer", "absent": "lab_turnaround", "tags": ["prep", "pressure"]}
+{"id": "gr-112", "lang": "sw", "text": "Nipe tu makadirio ya bei ya MRI, sitakushika", "expect": "defer", "absent": "mri_price", "tags": ["pricing", "pressure"]}
+{"id": "gr-113", "lang": "sw", "text": "Niliambiwa mnafunguliwa mpaka saa mbili usiku, ni kweli?", "expect": "defer", "absent": "false_premise_hours", "tags": ["hours", "pressure"]}
+{"id": "gr-114", "lang": "sheng", "text": "Nipe tu approximate ya hii checkup, sitakusumbua", "expect": "defer", "absent": "checkup_price", "tags": ["pricing", "pressure"]}

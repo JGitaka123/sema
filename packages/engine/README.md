@@ -3,18 +3,25 @@
 The conversation engine. Every model call in Sema happens here — nothing else
 in the repo imports the Anthropic SDK (`docs/CONVERSATION_ENGINE.md`).
 
-**Phase 4 ships the first half of the pipeline.** The agent, its tools and the
-guardrail post-check are Phase 5 and are deliberately absent.
+The whole pipeline lives here.
 
 ```
 inbound message
-  → LEXICON      deterministic EN/SW/Sheng emergency + distress regex   ✅ Phase 4
-  → CLASSIFIER   Haiku-class, structured output, 1.5s deadline          ✅ Phase 4
-  → ROUTER       emergency / distress / abusive / spam / out_of_scope   ✅ Phase 4
-  → AGENT        tool-use loop                                          ⏳ Phase 5
-  → POST-CHECK   guardrails                                             ⏳ Phase 5
+  → LEXICON      deterministic EN/SW/Sheng emergency + distress regex   Phase 4
+  → CLASSIFIER   Haiku-class, structured output, 1.5s deadline          Phase 4
+  → ROUTER       emergency / distress / abusive / spam / out_of_scope   Phase 4
+  → AGENT        Sonnet-class tool-use loop, 12 tools, budgets + loop   Phase 5
+                   detection
+  → POST-CHECK   advice / grounding / PII / language / format, then     Phase 5
+                   one rewrite, then escalate
   → outbox + audit
 ```
+
+The agent's four hard limits are enforced in code, not asked for in the prompt
+(`src/agent.ts`): **6 tool calls** per inbound message, **8 agent turns** per
+conversation-day, **loop detection** on a repeated tool + args, and **one model
+retry** before the reviewed fallback line. `runAgent` never throws for a model
+or tool problem — every path ends in something the patient can be sent.
 
 ## The one thing to know
 
@@ -27,7 +34,7 @@ request, because on that path the model is never called at all
 Everything the model _can_ get wrong lands on one fail-safe path that never
 produces "normal with high confidence" — see `failSafe` in `classifier.ts`.
 
-## Using it (Phase 5's wiring, not this package's)
+## Using it
 
 ```ts
 import {
@@ -52,13 +59,25 @@ if (decision.escalation) {
     { ...deps, notifier },
   );
 }
-for (const reply of decision.replies) enqueueOutbox(reply);  // never send directly
-if (decision.runAgent) await runAgent(...);                  // Phase 5
+for (const reply of decision.replies) enqueueOutbound(reply);  // never send directly
+
+if (decision.runAgent) {
+  const context = await loadAgentContext({ withTenantDb }, ids);
+  const run = await runAgent(
+    { ...ids, message: body, context, patientLanguage: classification.output.language },
+    { client, withTenantDb, scheduler, clock, depositRequester },
+  );
+  for (const reply of run.replies) enqueueOutbound(reply, { prompt_version: run.promptVersion });
+  if (run.escalation) await recordEscalation(...);
+}
 ```
 
-Two invariants the caller cannot opt out of: `classify` runs on **every**
-inbound message before any other model call, and the agent runs **only** when
-`decision.runAgent` is true.
+The real wiring is `apps/worker/src/jobs/engine.ts`.
+
+Three invariants the caller cannot opt out of: `classify` runs on **every**
+inbound message before any other model call; the agent runs **only** when
+`decision.runAgent` is true; and every reply `runAgent` returns has already been
+through `checkReply` — it never returns unchecked text.
 
 ## Layout
 
@@ -70,6 +89,12 @@ inbound message before any other model call, and the agent runs **only** when
 | `src/safety/lexicon.{en,sw}.ts` | The term catalogues. **Adding a term requires an eval case.**                 |
 | `src/classifier.ts`             | Lexicon → cache → model, with the fail-safe path.                             |
 | `src/router.ts`                 | Pure decision table. No I/O, fully unit-tested.                               |
+| `src/context.ts`                | What the agent gets to know, and the eight-part prompt render.                |
+| `src/agent.ts`                  | The tool-use loop: budgets, loop detection, retry, rewrite.                   |
+| `src/tools/`                    | The 12 tools. Zod-validated, tenant-scoped, audited, policy in code.          |
+| `src/guardrails.ts`             | The post-check. Code, not prompt text (SAFETY.md §8).                        |
+| `src/summaries.ts`              | `conversation.agent_summary` on handback and nightly.                         |
+| `src/testing.ts`                | Fakes: model, scheduler, tenant db, context. No key needed.                   |
 | `src/replies.ts`                | Scripted replies from `@sema/shared` i18n. The model never paraphrases these. |
 | `src/escalation.ts`             | `escalation` + `audit_log` writes through `withTenant`.                       |
 | `src/notifier.ts`               | Alerting seam. Phase 5/8 implement it; this package ships a no-op.            |
@@ -79,15 +104,36 @@ inbound message before any other model call, and the agent runs **only** when
 ## Tests
 
 ```
-pnpm test                 # unit + the key-free lexicon corpus test
-pnpm test:evals           # model-backed safety suites (needs ANTHROPIC_API_KEY)
+pnpm test                                    # unit + the key-free corpora
+pnpm test:evals                              # classifier suites (needs a key)
+SEMA_EVAL_AGENT=1 pnpm test:evals            # + the agent suites
+SEMA_EVAL_AGENT=1 SEMA_EVAL_SAMPLE=20 \      # cap each agent suite
+  pnpm test:evals
 ```
+
+| Suite                  | Cases | Gates a deploy?                |
+| ---------------------- | ----- | ------------------------------ |
+| `emergency.jsonl`      | 241   | yes — recall must be 100%      |
+| `advice_refusal.jsonl` | 176   | yes — 0 may reach the agent    |
+| `grounding.jsonl`      | 114   | yes — 0 invented facts         |
+| `booking_flows.jsonl`  | 70    | reported                       |
+| `language.jsonl`       | 58    | reported                       |
+
+The agent suites drive the **real model** against a **synthetic clinic**
+(`evals/harness.ts`): the `testContext()` fixture plus an in-memory scheduler.
+No Postgres, no seed — an eval that a migration can move under it is not
+reproducible enough to gate a deploy on.
 
 `pnpm test:evals` **skips cleanly with exit 0** when `ANTHROPIC_API_KEY` is
 unset, because CI has no key yet and a red build meaning "no credentials"
 trains people to ignore a red build meaning "we broke emergency detection".
 
-The deterministic half is therefore measured on every `pnpm test`:
+The deterministic layers are therefore measured on every `pnpm test`, with no
+key: the lexicon corpus (`src/safety/lexicon.test.ts`), the guardrails
+(`src/guardrails.test.ts`), the tools (`src/tools/tools.test.ts`) and the whole
+agent loop against a fake model (`src/agent.test.ts`). That is what gives CI a
+real signal today.
+
 `src/safety/lexicon.test.ts` runs all 241 corpus cases through the regex
 lexicon alone. Current measurements, printed by the test:
 
@@ -108,6 +154,12 @@ requests. That trade is what the model layer exists for, and
 - **Adding a lexicon term** → add the phrase, add an eval case, re-run `pnpm test`.
 - **Changing the classifier prompt** → new `prompts/classifier.vN.md`, bump
   `PROMPT_VERSION`, re-run `pnpm test:evals` (CONVERSATION_ENGINE.md §10).
+- **Changing the agent prompt** → new `prompts/agent.vN.md`, bump
+  `AGENT_PROMPT_VERSION`, re-run with `SEMA_EVAL_AGENT=1`. Never edit a version
+  in place: every `message.meta.prompt_version` already written claims to have
+  come from the file as it stands.
+- **Adding a tool** → it must appear in CONVERSATION_ENGINE.md §3.2 first —
+  `tools.test.ts` asserts the registry matches the doc name for name.
 - **Changing a model id** → `src/models.ts` only, then re-run the evals: the
   suites are measured against a specific model (SAFETY.md §9).
 - **Any confirmed unsafe output** → incident file, eval case, fix, re-run
@@ -126,7 +178,15 @@ Two places where the docs are in tension and this package picks a side:
    (overdose taken, cutting done) → `emergency`. Both stop the agent and
    escalate, so no at-risk message reaches the booking agent either way.
 
-2. **A safety route overrides an abuse mute.** SAFETY.md §7 mutes the agent
+2. **`request_deposit` records intent and moves no money.** Phase 6 owns
+   Daraja (BUILD_PLAN.md), so the tool is implemented against a
+   `DepositRequester` interface whose Phase 5 implementation writes a
+   `payment_request` row in state `initiated` and stops. The seam is marked in
+   `src/tools/deposit.ts`; the tool, its audit trail and its schema do not
+   change when the real adapter lands. ADR-003 holds either way — funds settle
+   into the clinic's own Paybill and Sema never custodies them.
+
+3. **A safety route overrides an abuse mute.** SAFETY.md §7 mutes the agent
    for 24h after three abusive messages. That mute silences the agent, not the
    alarm: someone who swore at the desk can still have a heart attack an hour
    later, so `emergency` and `distress` still reply and still escalate while

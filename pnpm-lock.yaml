@@ -145,6 +145,9 @@ importers:
       '@sema/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@sema/engine':
+        specifier: workspace:*
+        version: link:../../packages/engine
       '@sema/scheduling':
         specifier: workspace:*
         version: link:../../packages/scheduling
@@ -238,6 +241,9 @@ importers:
       '@sema/db':
         specifier: workspace:*
         version: link:../db
+      '@sema/scheduling':
+        specifier: workspace:*
+        version: link:../scheduling
       '@sema/shared':
         specifier: workspace:*
         version: link:../shared
