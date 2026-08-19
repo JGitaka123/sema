@@ -12,9 +12,10 @@ treatment or triages, and it escalates to a human whenever a conversation needs 
 
 ## Status
 
-Phase 0 (repo bootstrap) of the plan in [`docs/BUILD_PLAN.md`](docs/BUILD_PLAN.md). The monorepo,
-toolchain, CI and the shared utility layer exist; the data model, conversation engine, WhatsApp
-channel and payments do not yet.
+Phase 1 (data model) of the plan in [`docs/BUILD_PLAN.md`](docs/BUILD_PLAN.md). The monorepo,
+toolchain, CI, the shared utility layer and the full Postgres schema — tables, enums, indexes,
+overlap constraints, row level security and the Afyanex dev seed — exist. The conversation engine,
+WhatsApp channel and payments do not yet.
 
 ## Stack
 
@@ -69,22 +70,26 @@ open http://localhost:3001/docs       # OpenAPI UI, generated from the Zod schem
 ```
 
 Nothing in `pnpm install`, `pnpm lint`, `pnpm typecheck` or `pnpm test` requires Docker, Postgres,
-Redis or an API key — Phase 0 tests are pure unit tests. `pnpm dev` does need the containers.
+Redis or an API key — those are pure unit tests. `pnpm dev`, `pnpm db:migrate`, `pnpm db:seed` and
+`pnpm test:integration` do need Postgres; the integration suite skips with a message when none is
+reachable.
 
 ## Commands
 
-| Command               | What it does                                                    |
-| --------------------- | --------------------------------------------------------------- |
-| `pnpm dev`            | api + worker + inbox with hot reload                            |
-| `pnpm build`          | build every package in dependency order                         |
-| `pnpm lint`           | ESLint across the workspace                                     |
-| `pnpm typecheck`      | `tsc --noEmit` across the workspace                             |
-| `pnpm test`           | unit and integration tests                                      |
-| `pnpm test:evals`     | conversation engine safety + behaviour evals — Phase 4          |
-| `pnpm db:migrate`     | apply migrations — schema lands in Phase 1                      |
-| `pnpm db:seed`        | seed the Afyanex dev tenant + demo patients — Phase 1           |
-| `pnpm wa:simulate`    | send a fake inbound WhatsApp webhook to the local API — Phase 3 |
-| `pnpm mpesa:simulate` | send a fake Daraja callback to the local API — Phase 6          |
+| Command                 | What it does                                                    |
+| ----------------------- | --------------------------------------------------------------- |
+| `pnpm dev`              | api + worker + inbox with hot reload                            |
+| `pnpm build`            | build every package in dependency order                         |
+| `pnpm lint`             | ESLint across the workspace                                     |
+| `pnpm typecheck`        | `tsc --noEmit` across the workspace                             |
+| `pnpm test`             | unit tests — no Docker, Postgres or API key needed              |
+| `pnpm test:integration` | migrations, RLS and constraint tests against real Postgres      |
+| `pnpm test:evals`       | conversation engine safety + behaviour evals — Phase 4          |
+| `pnpm db:generate`      | regenerate migration SQL from the Drizzle schema                |
+| `pnpm db:migrate`       | apply migrations                                                |
+| `pnpm db:seed`          | seed the Afyanex dev tenant + demo patients (safe to re-run)    |
+| `pnpm wa:simulate`      | send a fake inbound WhatsApp webhook to the local API — Phase 3 |
+| `pnpm mpesa:simulate`   | send a fake Daraja callback to the local API — Phase 6          |
 
 A Husky pre-commit hook runs `pnpm lint && pnpm typecheck`. CI runs lint, typecheck, test and build
 on every pull request and on pushes to `main`.

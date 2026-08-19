@@ -3,6 +3,7 @@ import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
 import pg from "pg";
 
 import * as schema from "./schema/index.js";
+import { createWithTenantDb, type WithTenantDb } from "./tenant-db.js";
 import { createWithTenant, type TenantPool, type WithTenant } from "./with-tenant.js";
 
 /**
@@ -16,6 +17,7 @@ import { createWithTenant, type TenantPool, type WithTenant } from "./with-tenan
 let pool: pg.Pool | undefined;
 let db: NodePgDatabase<typeof schema> | undefined;
 let withTenantFn: WithTenant | undefined;
+let withTenantDbFn: WithTenantDb | undefined;
 
 function databaseUrl(): string {
   const url = process.env["DATABASE_URL"];
@@ -59,11 +61,20 @@ export const withTenant: WithTenant = (clinicId, work) => {
   return withTenantFn(clinicId, work);
 };
 
+/** The same transaction and tenant GUC, with Drizzle instead of raw SQL. */
+export const withTenantDb: WithTenantDb = (clinicId, work) => {
+  if (!withTenantDbFn) {
+    withTenantDbFn = createWithTenantDb(getPool() as unknown as TenantPool);
+  }
+  return withTenantDbFn(clinicId, work);
+};
+
 /** Close the pool on shutdown. Safe to call when nothing ever connected. */
 export async function closeDb(): Promise<void> {
   const current = pool;
   pool = undefined;
   db = undefined;
   withTenantFn = undefined;
+  withTenantDbFn = undefined;
   if (current) await current.end();
 }

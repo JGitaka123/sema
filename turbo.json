@@ -19,6 +19,26 @@
       "dependsOn": ["^build"],
       "outputs": []
     },
+    "test:integration": {
+      "dependsOn": ["^build"],
+      "outputs": [],
+      "cache": false,
+      "env": ["DATABASE_URL", "TEST_DATABASE_URL"]
+    },
+    "generate": {
+      "dependsOn": ["^build"],
+      "cache": false
+    },
+    "migrate": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "env": ["DATABASE_URL", "DATABASE_MIGRATION_URL"]
+    },
+    "seed": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "env": ["DATABASE_URL"]
+    },
     "dev": {
       "dependsOn": ["^build"],
       "cache": false,

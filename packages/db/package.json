@@ -21,10 +21,11 @@
     "lint": "eslint .",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
-    "generate": "drizzle-kit generate",
-    "migrate": "drizzle-kit migrate",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "generate": "tsc -p tsconfig.json && drizzle-kit generate",
+    "migrate": "tsc -p tsconfig.json && node dist/migrate.js",
     "studio": "drizzle-kit studio",
-    "seed": "node -e \"console.log('[sema] db:seed lands in Phase 1 — see docs/BUILD_PLAN.md')\""
+    "seed": "tsc -p tsconfig.json && node dist/seed/index.js"
   },
   "dependencies": {
     "@sema/shared": "workspace:*",

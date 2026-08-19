@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, 'phase/**']
+    branches: [main, "phase/**"]
   pull_request:
 
 # A new push to a PR cancels the previous run.
@@ -20,9 +20,9 @@ jobs:
     timeout-minutes: 15
 
     env:
-      # Phase 0 tests are pure unit tests: no Postgres, no Redis, no Docker,
-      # and no ANTHROPIC_API_KEY. Keep it that way — anything needing a live
-      # dependency belongs behind `pnpm test:integration`.
+      # This job stays free of live dependencies: no Postgres, no Redis, no
+      # ANTHROPIC_API_KEY. Anything that needs one belongs in the `integration`
+      # job below.
       NODE_ENV: test
       TURBO_TELEMETRY_DISABLED: 1
       DO_NOT_TRACK: 1
@@ -54,3 +54,64 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+  integration:
+    name: migrations · RLS · constraints (Postgres 16)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      NODE_ENV: test
+      TURBO_TELEMETRY_DISABLED: 1
+      DO_NOT_TRACK: 1
+      # The service container below. btree_gist, citext and pgcrypto are
+      # created by the migration itself (CREATE EXTENSION IF NOT EXISTS), so no
+      # init script is needed.
+      DATABASE_URL: postgres://sema:sema@localhost:5432/sema_test
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: sema
+          POSTGRES_PASSWORD: sema
+          POSTGRES_DB: sema_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U sema -d sema_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      # Proves the migration applies to an empty database exactly as a new
+      # environment would, before any test touches it.
+      - name: Migrate
+        run: pnpm db:migrate
+
+      # Runs twice on purpose: the seed must be safe to re-run (Phase 1
+      # acceptance), and a second run is the cheapest proof.
+      - name: Seed
+        run: pnpm db:seed
+
+      - name: Seed again (idempotency)
+        run: pnpm db:seed
+
+      - name: Integration tests
+        run: pnpm test:integration

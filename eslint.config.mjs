@@ -42,5 +42,14 @@ export default tseslint.config(
       "no-console": "off",
     },
   },
+  {
+    // Operator-facing scripts (migrate, seed, simulators) and test harnesses
+    // print to a terminal, not to the log pipeline. They still must not print
+    // PHI: phone numbers go through `maskPhone` (hard rule 4).
+    files: ["**/scripts/**", "**/src/migrate.ts", "**/src/seed/**", "**/test/**"],
+    rules: {
+      "no-console": "off",
+    },
+  },
   prettier,
 );

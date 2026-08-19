@@ -24,6 +24,20 @@ export const ID_PREFIXES = {
   slotHold: "hld",
   auditLog: "aud",
   knowledge: "knw",
+  // Added in Phase 1 so every table in docs/DATA_MODEL.md with an `id` column
+  // has a prefix of its own. No prefix may be a prefix of another one — a test
+  // in ids.test.ts enforces both properties.
+  intakeQuestion: "siq",
+  availabilityRule: "avr",
+  timeOff: "tof",
+  consent: "pcn",
+  attachment: "att",
+  reminder: "rem",
+  template: "tpl",
+  note: "nte",
+  subscription: "sub",
+  payer: "pyer",
+  encounter: "enc",
 } as const;
 
 export type IdEntity = keyof typeof ID_PREFIXES;
