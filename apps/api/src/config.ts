@@ -12,6 +12,19 @@ const EnvSchema = z.object({
   API_PORT: z.coerce.number().int().positive().default(3001),
   API_PUBLIC_URL: z.string().url().default("http://localhost:3001"),
   CORS_ORIGINS: z.string().default("http://localhost:3000"),
+
+  // ── WhatsApp Cloud API (Phase 3, INTEGRATIONS.md §1) ─────────────────────
+  /**
+   * The Meta app secret. Every inbound webhook is HMAC-verified against it
+   * (ARCHITECTURE.md §9). Optional in the schema so `pnpm test` and a fresh
+   * clone boot without it; the refinement below makes it mandatory in
+   * production, where a missing secret would mean an unauthenticated endpoint
+   * that writes to patient records.
+   */
+  WHATSAPP_APP_SECRET: z.string().min(1).optional(),
+  /** Echoed back on Meta's GET verification handshake. */
+  WHATSAPP_VERIFY_TOKEN: z.string().min(1).optional(),
+  WHATSAPP_GRAPH_VERSION: z.string().default("v20.0"),
 });
 
 export type ApiConfig = z.infer<typeof EnvSchema> & {
@@ -26,6 +39,25 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
     throw new Error(`Invalid API environment — ${issues}`);
   }
   const value = parsed.data;
+
+  // Fail at boot, loudly, rather than serving an endpoint that cannot
+  // authenticate its caller. The webhook itself also fails closed
+  // (`verifySignature` returns `missing_secret`), but a production process
+  // that cannot receive messages should not pretend to be healthy.
+  if (value.NODE_ENV === "production") {
+    const missing = (
+      [
+        ["WHATSAPP_APP_SECRET", value.WHATSAPP_APP_SECRET],
+        ["WHATSAPP_VERIFY_TOKEN", value.WHATSAPP_VERIFY_TOKEN],
+      ] as const
+    )
+      .filter(([, v]) => v === undefined)
+      .map(([name]) => name);
+    if (missing.length > 0) {
+      throw new Error(`Invalid API environment — ${missing.join(", ")} is required in production.`);
+    }
+  }
+
   return {
     ...value,
     isProduction: value.NODE_ENV === "production",

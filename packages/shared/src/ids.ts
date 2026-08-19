@@ -38,6 +38,8 @@ export const ID_PREFIXES = {
   subscription: "sub",
   payer: "pyer",
   encounter: "enc",
+  // Phase 3: a clinic's connected WhatsApp sender (INTEGRATIONS.md §1).
+  clinicWhatsapp: "cwa",
 } as const;
 
 export type IdEntity = keyof typeof ID_PREFIXES;

@@ -1,6 +1,7 @@
 import type {
   availabilityRule,
   clinic,
+  clinicWhatsapp,
   knowledgeItem,
   location,
   patient,
@@ -46,6 +47,31 @@ export const clinicRow: typeof clinic.$inferInsert = {
   onboardingState: { step: "seeded", whatsapp_connected: false, mpesa_connected: false },
   kmpdcLicenceNo: "KMPDC/F/2019/00421",
 };
+
+/**
+ * The connected WhatsApp sender (Phase 3, INTEGRATIONS.md §1).
+ *
+ * `phone_number_id` is the id Meta puts in `value.metadata.phone_number_id` on
+ * every inbound webhook, and it is what routes a payload to this clinic. This
+ * fake one is what `pnpm wa:simulate` sends, so a freshly seeded database can
+ * run the whole inbound pipeline without Meta.
+ *
+ * No token: a real one arrives through Embedded Signup in Phase 9 and is
+ * stored encrypted. A seeded clinic therefore *receives* but cannot send,
+ * which is the right way round for a dev fixture.
+ */
+export const whatsappRows: (typeof clinicWhatsapp.$inferInsert)[] = [
+  {
+    id: seedId("clinicWhatsapp", "afyanex"),
+    clinicId: AFYANEX_CLINIC_ID,
+    wabaId: "100000000000001",
+    phoneNumberId: "100000000000002",
+    displayPhoneNumber: "+254709000100",
+    displayName: "Afyanex Clinic",
+    qualityRating: "GREEN",
+    isActive: true,
+  },
+];
 
 export const locationRows: (typeof location.$inferInsert)[] = [
   {

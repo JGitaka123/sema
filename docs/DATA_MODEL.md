@@ -134,6 +134,13 @@ create table outbox (id text primary key, clinic_id text not null, message_id te
 
 create table webhook_dedup (source text not null, external_id text not null, received_at timestamptz default now(), primary key(source, external_id));
 
+-- Phase 3: the clinic's connected WhatsApp sender (INTEGRATIONS.md §1, ADR-001).
+create table clinic_whatsapp (id text primary key, clinic_id text not null references clinic(id),
+  waba_id text not null, phone_number_id text not null, display_phone_number text, display_name text,
+  quality_rating text, -- GREEN|YELLOW|RED, monitored per COMPLIANCE.md §3
+  access_token_encrypted text, is_active bool not null default true, ...);
+create unique index clinic_whatsapp_phone_number_id_key on clinic_whatsapp(phone_number_id); -- global: one sender, one clinic
+
 create table subscription (id text primary key, clinic_id text not null unique, plan text not null, status text not null,
   seats int, conversation_quota int, period_start date, period_end date, provider text, provider_ref text, ...);
 
@@ -146,6 +153,16 @@ create table payer (id text primary key, clinic_id text not null, name text not 
 create table encounter (id text primary key, clinic_id text not null, patient_id text, appointment_id text, provider_id text,
   payer_id text references payer(id), started_at timestamptz, ended_at timestamptz, external_ref text, ...);
 ```
+
+## Inbound routing (Phase 3)
+
+`clinic_whatsapp` is a tenant table with the usual `tenant_isolation` policy, but the WhatsApp webhook has to resolve a clinic *before* it has a tenant context — which is exactly what RLS is there to prevent. Rather than granting the app role `BYPASSRLS`, `drizzle/0001_whatsapp_channel.sql` creates one `SECURITY DEFINER` function:
+
+```sql
+sema_resolve_clinic_by_phone_number_id(text) returns text
+```
+
+It returns a clinic id and nothing else — no token, no WABA id, no patient data — with a pinned `search_path`, and returns NULL for a deactivated number. `packages/db/src/routing.ts` is its only caller. Everything after it runs inside `withTenant`.
 
 ## Indexes (minimum)
 - `conversation(clinic_id, status, last_message_at desc)`, `message(conversation_id, at)`, `appointment(clinic_id, provider_id, slot)`, `patient(clinic_id, phone_e164)`, `reminder(status, due_at)`, `outbox(status, next_attempt_at)`, `escalation(clinic_id, status)`, `audit_log(clinic_id, at)`.
@@ -164,3 +181,8 @@ Implemented in `packages/db/src/schema`, created by `drizzle/0000_data_model.sql
 - **`clinic.kmpdc_licence_no`** added: COMPLIANCE.md §5 requires the licence number to be stored on the clinic.
 - Foreign keys were added where the sketch used a bare `text` id and the target is unambiguous (`time_off.provider_id`, `slot_hold.*`, `note.patient_id`/`conversation_id`). `note.appointment_id`, `encounter.*` and `appointment.encounter_id` stay unconstrained, to avoid an import cycle and Phase 3 coupling.
 - Roles (`sema_app`, `sema_system`) are environment setup, documented in `packages/db/README.md`, not created by migrations — managed Postgres providers differ on what a migration may do to roles.
+
+## Implementation notes (Phase 3)
+- **`clinic_whatsapp`** added in `drizzle/0001_whatsapp_channel.sql`. It is not in the Phase 1 sketch above because ADR-001's Embedded Signup flow only became load-bearing when inbound routing arrived; INTEGRATIONS.md §1 always specified the fields. Onboarding writes it in Phase 9; Phase 3 only reads it.
+- **`access_token_encrypted`** holds ciphertext once Phase 9 lands envelope encryption (ARCHITECTURE.md §9). Until then a dev token sits there in plaintext and `apps/worker/src/channel.ts#decryptToken` is the single seam where real decryption goes.
+- **`message.status` for outbound** is driven by Meta's delivery receipts (`sent` → `delivered` → `read`, or `failed`). The status job only ever moves a message forwards, because Meta does not guarantee receipt ordering.

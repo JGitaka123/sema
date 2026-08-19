@@ -1,0 +1,45 @@
+{
+  "object": "whatsapp_business_account",
+  "entry": [
+    {
+      "id": "100000000000001",
+      "changes": [
+        {
+          "field": "messages",
+          "value": {
+            "messaging_product": "whatsapp",
+            "metadata": {
+              "display_phone_number": "254709000100",
+              "phone_number_id": "100000000000002"
+            },
+            "contacts": [
+              {
+                "profile": { "name": "Amina Njeri" },
+                "wa_id": "254712000001"
+              }
+            ],
+            "messages": [
+              {
+                "context": {
+                  "from": "254709000100",
+                  "id": "wamid.HBgMMjU0NzA5MDAwMTAwFQIAERgSN0EwMDAwMDAwMDAwMDBBQgA="
+                },
+                "from": "254712000001",
+                "id": "wamid.HBgMMjU0NzEyMDAwMDAxFQIAEhggN0EwMDAwMDAwMDAwMDAxMQA=",
+                "timestamp": "1787059400",
+                "type": "interactive",
+                "interactive": {
+                  "type": "button_reply",
+                  "button_reply": {
+                    "id": "slot_2026-08-20T09:00:00Z",
+                    "title": "Thu 9:00 AM"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
