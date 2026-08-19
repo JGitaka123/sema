@@ -69,15 +69,54 @@ function assertSource(source: string): BookingSource {
   return source as BookingSource;
 }
 
-async function takeHold(db: TenantDb, clinicId: string, holdId: string): Promise<HoldRow> {
+/**
+ * Either the live hold, or the fact that there isn't one.
+ *
+ * A result rather than an exception on purpose — see `claimHold`.
+ */
+type HoldClaim = { readonly ok: true; readonly hold: HoldRow } | { readonly ok: false };
+
+/**
+ * What the `book` transaction produced. `hold_expired` is carried out of the
+ * transaction as a value so the commit still happens; the error is raised
+ * after it.
+ */
+type BookOutcome =
+  | { readonly kind: "hold_expired" }
+  | {
+      readonly kind: "booked";
+      readonly appointment: AppointmentRow;
+      readonly depositRequiredMinor: number;
+    };
+
+/** The same, for `reschedule`. */
+type RescheduleOutcome =
+  | { readonly kind: "hold_expired" }
+  | {
+      readonly kind: "rescheduled";
+      readonly appointment: AppointmentRow;
+      readonly previousAppointmentId: string;
+      readonly policy: PolicyDecision;
+    };
+
+/**
+ * Take the hold `for update`, deleting it if it has already expired.
+ *
+ * **This must not throw**, and that is the whole point. Throwing from inside
+ * the tenant transaction rolls it back — including the `delete` that clears
+ * the expired hold, which then keeps blocking its slot under the unconditional
+ * exclusion constraint until the next sweep. The caller returns a "no hold"
+ * outcome instead, lets the transaction commit the cleanup, and raises
+ * `HOLD_EXPIRED` outside it.
+ */
+async function claimHold(db: TenantDb, clinicId: string, holdId: string): Promise<HoldClaim> {
   const hold = await lockHold(db, clinicId, holdId);
-  if (!hold) throw holdExpired(holdId);
+  if (!hold) return { ok: false };
   if (hold.expired) {
-    // Clear it on the way out so the slot is immediately free again.
     await deleteHold(db, clinicId, holdId);
-    throw holdExpired(holdId);
+    return { ok: false };
   }
-  return hold;
+  return { ok: true, hold };
 }
 
 /**
@@ -96,9 +135,13 @@ export async function book(deps: SchedulingDeps, input: BookInput): Promise<Book
   const source = assertSource(input.source ?? "agent");
   const actor: Actor = input.actor ?? { kind: "agent" };
 
-  return mapSlotConflict(() =>
-    deps.withTenantDb(clinicId, async (db) => {
-      const hold = await takeHold(db, clinicId, holdId);
+  const outcome = await mapSlotConflict(() =>
+    deps.withTenantDb(clinicId, async (db): Promise<BookOutcome> => {
+      const claim = await claimHold(db, clinicId, holdId);
+      // Return, don't throw: the transaction has to commit `claimHold`'s
+      // cleanup of an expired hold before the caller hears about it.
+      if (!claim.ok) return { kind: "hold_expired" };
+      const hold = claim.hold;
       const service = await loadService(db, clinicId, hold.serviceId);
 
       const status = service.depositMinor > 0 ? "pending_deposit" : "booked";
@@ -134,9 +177,12 @@ export async function book(deps: SchedulingDeps, input: BookInput): Promise<Book
         reason: `source:${source}`,
       });
 
-      return { appointment, depositRequiredMinor: service.depositMinor };
+      return { kind: "booked", appointment, depositRequiredMinor: service.depositMinor };
     }),
   );
+
+  if (outcome.kind === "hold_expired") throw holdExpired(holdId);
+  return { appointment: outcome.appointment, depositRequiredMinor: outcome.depositRequiredMinor };
 }
 
 export interface RescheduleInput {
@@ -173,8 +219,8 @@ export async function reschedule(
   const appointmentId = assertId("appointment", input.appointmentId, "appointmentId");
   const holdId = assertId("slotHold", input.newHoldId, "newHoldId");
 
-  return mapSlotConflict(() =>
-    deps.withTenantDb(clinicId, async (db) => {
+  const outcome = await mapSlotConflict(() =>
+    deps.withTenantDb(clinicId, async (db): Promise<RescheduleOutcome> => {
       const previous = await lockAppointment(db, clinicId, appointmentId);
       if (!previous) throw new AppError("NOT_FOUND", "Appointment not found.");
       assertChangeable(previous, "reschedule");
@@ -192,7 +238,12 @@ export async function reschedule(
         });
       }
 
-      const hold = await takeHold(db, clinicId, holdId);
+      // Nothing has been written yet, so returning here commits only
+      // `claimHold`'s cleanup of the expired hold.
+      const claim = await claimHold(db, clinicId, holdId);
+      if (!claim.ok) return { kind: "hold_expired" };
+      const hold = claim.hold;
+
       if (hold.serviceId !== previous.serviceId) {
         throw new AppError(
           "VALIDATION_FAILED",
@@ -248,9 +299,21 @@ export async function reschedule(
         reason: input.reason ?? decision.reason,
       });
 
-      return { appointment, previousAppointmentId: appointmentId, policy: decision };
+      return {
+        kind: "rescheduled",
+        appointment,
+        previousAppointmentId: appointmentId,
+        policy: decision,
+      };
     }),
   );
+
+  if (outcome.kind === "hold_expired") throw holdExpired(holdId);
+  return {
+    appointment: outcome.appointment,
+    previousAppointmentId: outcome.previousAppointmentId,
+    policy: outcome.policy,
+  };
 }
 
 export interface CancelInput {

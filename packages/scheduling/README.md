@@ -89,13 +89,25 @@ constraint is unconditional and expiry is a delete. Two consequences:
 
 Typed `AppError` codes, never a driver error:
 
-| code                | when                                                                                   |
-| ------------------- | -------------------------------------------------------------------------------------- |
-| `SLOT_UNAVAILABLE`  | the exclusion constraint rejected the write, or an appointment already covers the slot |
-| `HOLD_EXPIRED`      | the hold is gone or past its TTL                                                       |
-| `VALIDATION_FAILED` | malformed id, unbookable service, or a time the clinic would never have offered        |
-| `CONFLICT`          | the appointment is in a status that can no longer be changed                           |
-| `NOT_FOUND`         | the clinic, service or appointment is not visible in this tenant                       |
+| code                | when                                                                                                                |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `SLOT_UNAVAILABLE`  | the slot is real but taken: an appointment, a live hold or time off covers it, or the constraint rejected the write |
+| `HOLD_EXPIRED`      | the hold is gone or past its TTL                                                                                    |
+| `VALIDATION_FAILED` | malformed id, unbookable service, or a time this clinic would never offer (off-grid, closed, too soon, too far out) |
+| `CONFLICT`          | the appointment is in a status that can no longer be changed                                                        |
+| `NOT_FOUND`         | the clinic, service or appointment is not visible in this tenant                                                    |
+
+The first and third rows carry the load-bearing distinction.
+`SLOT_UNAVAILABLE` means "that time has gone, offer another", which the agent
+can recover from; `VALIDATION_FAILED` means the request itself was wrong and
+retrying will not help.
+
+**Every way of losing a race reports `SLOT_UNAVAILABLE`** — whether the
+competing transaction had already committed by the time `holdSlot` re-derived
+the day, or landed between that read and the insert. `resolveOfferedSlot`
+keeps the two apart by generating candidate slots with _no_ occupancy first,
+so only the clinic's own rules can produce a validation error, and then asking
+separately whether the slot is free.
 
 ## Money
 

@@ -1,4 +1,4 @@
-import { AppError } from "@sema/shared";
+import { AppError, newId } from "@sema/shared";
 import { beforeAll, describe, expect, it } from "vitest";
 
 import { HOLD_TTL_MINUTES } from "../src/index.js";
@@ -156,11 +156,18 @@ describeDb("holdSlot", () => {
     expect(await countHolds(h, stale.clinicId)).toBe(1);
   });
 
-  it("refuses a slot the clinic would never have offered", async () => {
+  /**
+   * The error taxonomy, and it matters: a `VALIDATION_FAILED` tells the agent
+   * the patient asked for something impossible, while `SLOT_UNAVAILABLE` tells
+   * it to offer another time. These two suites pin each side.
+   */
+  it("reports a structurally impossible time as VALIDATION_FAILED", async () => {
     const outside = [
       new Date("2030-01-07T03:00:00Z"), // 06:00 EAT — before opening
       new Date("2030-01-07T06:07:00Z"), // off the 15-minute grid
+      new Date("2030-01-07T14:00:00Z"), // 17:00 EAT — after closing
       new Date("2030-01-06T06:00:00Z"), // a Sunday
+      new Date("2031-01-06T06:00:00Z"), // beyond the 30-day booking window
     ];
     for (const start of outside) {
       await expect(
@@ -175,7 +182,32 @@ describeDb("holdSlot", () => {
     }
   });
 
-  it("refuses a slot an appointment already occupies", async () => {
+  /**
+   * The deterministic form of the race in the two suites above: by the time a
+   * loser re-derives the day, the winner's hold is committed and visible, so
+   * the slot is gone from the generated set. That must still read as
+   * `SLOT_UNAVAILABLE` — it is a real slot, taken — and never as a validation
+   * error. Doing it sequentially means a regression fails every run rather
+   * than only when the scheduler interleaves unluckily.
+   */
+  it("reports a real slot that is already held as SLOT_UNAVAILABLE", async () => {
+    const busy = await createSchedulingTenant(h, "busy-hold");
+    const start = minutesAfter(MONDAY_0900, 420);
+    const request = {
+      clinicId: busy.clinicId,
+      providerId: busy.providerId,
+      serviceId: busy.serviceId,
+      start,
+      patientId: busy.patientId,
+    };
+
+    await busy.scheduler.holdSlot(request);
+    await expect(busy.scheduler.holdSlot(request)).rejects.toMatchObject({
+      code: "SLOT_UNAVAILABLE",
+    });
+  });
+
+  it("reports a slot an appointment already occupies as SLOT_UNAVAILABLE", async () => {
     const taken = await createSchedulingTenant(h, "taken");
     const start = minutesAfter(MONDAY_0900, 360);
     const held = await taken.scheduler.holdSlot({
@@ -199,7 +231,29 @@ describeDb("holdSlot", () => {
         start,
         patientId: taken.patientId,
       }),
-    ).rejects.toMatchObject({ code: "VALIDATION_FAILED" });
+    ).rejects.toMatchObject({ code: "SLOT_UNAVAILABLE" });
+  });
+
+  it("reports a slot covered by time off as SLOT_UNAVAILABLE", async () => {
+    const away = await createSchedulingTenant(h, "away");
+    const start = minutesAfter(MONDAY_0900, 60);
+    await h.asOwner(away.clinicId, (client) =>
+      client.query(
+        `insert into time_off (id, clinic_id, provider_id, starts_at, ends_at, reason)
+         values ($3, $1, $2, '2030-01-07T06:30:00Z', '2030-01-07T08:00:00Z', 'leave')`,
+        [away.clinicId, away.providerId, newId("timeOff")],
+      ),
+    );
+
+    await expect(
+      away.scheduler.holdSlot({
+        clinicId: away.clinicId,
+        providerId: away.providerId,
+        serviceId: away.serviceId,
+        start,
+        patientId: away.patientId,
+      }),
+    ).rejects.toMatchObject({ code: "SLOT_UNAVAILABLE" });
   });
 });
 

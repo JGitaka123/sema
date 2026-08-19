@@ -2,7 +2,7 @@ import type { TenantDb } from "@sema/db";
 import { newId } from "@sema/shared";
 
 import { dateKeyInTz, endOfKey, startOfKey } from "./calendar.js";
-import { loadSchedulingContext, slotsFrom } from "./context.js";
+import { loadSchedulingContext } from "./context.js";
 import { assertId, mapSlotConflict, notBookable, slotUnavailable } from "./errors.js";
 import {
   deleteExpiredHolds,
@@ -11,6 +11,7 @@ import {
   insertHold,
   loadClinicSettings,
 } from "./repository.js";
+import { generateSlots, isBlocked } from "./slots.js";
 import type { SchedulingDeps, Slot } from "./types.js";
 
 /**
@@ -124,8 +125,25 @@ export async function holdSlot(deps: SchedulingDeps, input: HoldSlotInput): Prom
  * Re-derive the requested slot from the clinic's own rules.
  *
  * Regenerating the clinic-local day and requiring an exact start match is what
- * enforces granularity, min notice, the booking window, working hours and time
- * off on the write path — not just on the search path.
+ * enforces granularity, min notice, the booking window, working hours and the
+ * provider's service list on the write path — not just on the search path.
+ *
+ * The two questions below are asked **separately, and in this order**, because
+ * they are different failures deserving different answers:
+ *
+ *  1. *Would this clinic ever offer this start?* Asked against the working
+ *     windows with no occupancy at all, so only the clinic's own rules can
+ *     reject it. A "no" means a time off the grid, outside opening hours, too
+ *     soon, or beyond the booking window — `VALIDATION_FAILED`, and retrying
+ *     will not help.
+ *  2. *Is that slot free right now?* A "no" means an appointment, a live hold
+ *     or time off covers it — `SLOT_UNAVAILABLE`, and the right response is to
+ *     offer the patient a different time.
+ *
+ * Folding the two together is what made a patient who merely lost a race
+ * receive a generic validation error: by the time the loser re-derived the
+ * day, the winner's hold was committed and visible, so the slot had simply
+ * vanished from the generated set.
  */
 async function resolveOfferedSlot(
   db: TenantDb,
@@ -153,16 +171,23 @@ async function resolveOfferedSlot(
     allowNonPatientBookable: input.allowNonPatientBookable,
   });
 
+  // 1. Structural.
   const wanted = input.start.getTime();
-  const slot = slotsFrom(context).find(
+  const slot = generateSlots({ windows: context.windows, busy: [], config: context.config }).find(
     (candidate) =>
       candidate.providerId === input.providerId && candidate.start.getTime() === wanted,
   );
   if (!slot) {
-    throw notBookable("That time is not available for this service.", {
+    throw notBookable("That time is not one this clinic offers for this service.", {
       providerId: input.providerId,
     });
   }
+
+  // 2. Occupancy — a real slot, but somebody already has it.
+  if (isBlocked(context.busy, input.providerId, { start: slot.start, end: slot.blockEnd })) {
+    throw slotUnavailable({ providerId: input.providerId });
+  }
+
   return slot;
 }
 
