@@ -10,13 +10,26 @@ import {
 } from "fastify-type-provider-zod";
 
 import { loadConfig, type ApiConfig } from "./config.js";
-import { loggerOptions } from "./logger.js";
+import { loggerOptions, type LogDestination } from "./logger.js";
 import { healthRoutes } from "./routes/health.js";
+import { whatsappWebhookRoutes, type WhatsAppWebhookDeps } from "./routes/webhooks/whatsapp.js";
 
 export interface BuildAppOptions {
   config?: ApiConfig;
   /** Set false in tests to keep output clean. */
   logger?: boolean;
+  /**
+   * Collect log lines instead of writing them to stdout, through the real
+   * pino configuration — redaction list and serialisers included. The PHI
+   * tests use it; production leaves it undefined.
+   */
+  logDestination?: LogDestination;
+  /**
+   * Override the WhatsApp webhook's Postgres/Redis wiring. Tests pass fakes;
+   * production leaves it undefined and the route builds the real thing on
+   * first use.
+   */
+  whatsappDeps?: WhatsAppWebhookDeps;
 }
 
 /**
@@ -28,10 +41,11 @@ export interface BuildAppOptions {
  */
 export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyInstance> {
   const config = options.config ?? loadConfig();
-  const useLogger = options.logger ?? config.NODE_ENV !== "test";
+  // An explicit destination implies logging is wanted, even under NODE_ENV=test.
+  const useLogger = options.logger ?? (options.logDestination !== undefined || config.NODE_ENV !== "test");
 
   const app = Fastify({
-    logger: useLogger ? loggerOptions(config.LOG_LEVEL) : false,
+    logger: useLogger ? loggerOptions(config.LOG_LEVEL, options.logDestination) : false,
     // Meta signs the raw body; keeping the limit tight also caps webhook abuse.
     bodyLimit: 1_048_576,
     // Webhooks must ack in < 3s (hard rule 6) — fail fast rather than hang.
@@ -53,7 +67,10 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
         version: "0.0.0",
       },
       servers: [{ url: config.API_PUBLIC_URL }],
-      tags: [{ name: "system", description: "Health and diagnostics" }],
+      tags: [
+        { name: "system", description: "Health and diagnostics" },
+        { name: "webhooks", description: "Signed callbacks from Meta and Safaricom" },
+      ],
     },
     transform: jsonSchemaTransform,
   });
@@ -88,6 +105,13 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   );
 
   await app.register(healthRoutes);
+
+  // Registered as its own plugin so Fastify's encapsulation keeps the raw-body
+  // content-type parser it installs from leaking to the rest of the API.
+  await app.register(whatsappWebhookRoutes, {
+    config,
+    ...(options.whatsappDeps === undefined ? {} : { deps: options.whatsappDeps }),
+  });
 
   return app;
 }

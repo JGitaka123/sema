@@ -29,7 +29,21 @@ const REDACT_PATHS = [
   "*.name",
 ];
 
-export function loggerOptions(level: string): FastifyServerOptions["logger"] {
+/** Somewhere log lines can be written. `process.stdout` in production. */
+export interface LogDestination {
+  write(line: string): void;
+}
+
+/**
+ * `destination` exists so a test can assert on what the *real* logger emits —
+ * same redaction list, same serialisers — rather than on a mock. The PHI test
+ * in `routes/webhooks/whatsapp.test.ts` is only meaningful if it runs through
+ * this exact configuration.
+ */
+export function loggerOptions(
+  level: string,
+  destination?: LogDestination,
+): FastifyServerOptions["logger"] {
   return {
     level,
     redact: { paths: REDACT_PATHS, censor: "[redacted]" },
@@ -41,5 +55,6 @@ export function loggerOptions(level: string): FastifyServerOptions["logger"] {
         return { statusCode: reply.statusCode };
       },
     },
+    ...(destination === undefined ? {} : { stream: destination }),
   };
 }

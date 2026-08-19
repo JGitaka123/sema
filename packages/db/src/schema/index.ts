@@ -27,6 +27,7 @@ export * from "./payments.js";
 export * from "./knowledge.js";
 export * from "./ops.js";
 export * from "./phase3.js";
+export * from "./whatsapp.js";
 
 import * as availability from "./availability.js";
 import * as catalog from "./catalog.js";
@@ -39,6 +40,7 @@ import * as phase3 from "./phase3.js";
 import * as scheduling from "./scheduling.js";
 import * as staff from "./staff.js";
 import * as tenancy from "./tenancy.js";
+import * as whatsapp from "./whatsapp.js";
 
 const modules = [
   tenancy,
@@ -52,6 +54,7 @@ const modules = [
   knowledge,
   ops,
   phase3,
+  whatsapp,
 ];
 
 function isPgTable(value: unknown): value is PgTable {

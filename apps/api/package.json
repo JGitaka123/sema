@@ -10,15 +10,19 @@
     "start": "node dist/server.js",
     "lint": "eslint .",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "wa:simulate": "tsx scripts/wa-simulate.ts"
   },
   "dependencies": {
     "@fastify/swagger": "^9.4.0",
     "@fastify/swagger-ui": "^5.2.0",
+    "@sema/channels": "workspace:*",
     "@sema/db": "workspace:*",
     "@sema/shared": "workspace:*",
+    "bullmq": "^5.34.4",
     "fastify": "^5.2.0",
     "fastify-type-provider-zod": "^4.0.2",
+    "ioredis": "^5.4.2",
     "pino": "^9.5.0",
     "zod": "^3.24.1"
   },

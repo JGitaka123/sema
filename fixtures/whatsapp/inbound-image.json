@@ -1,0 +1,40 @@
+{
+  "object": "whatsapp_business_account",
+  "entry": [
+    {
+      "id": "100000000000001",
+      "changes": [
+        {
+          "field": "messages",
+          "value": {
+            "messaging_product": "whatsapp",
+            "metadata": {
+              "display_phone_number": "254709000100",
+              "phone_number_id": "100000000000002"
+            },
+            "contacts": [
+              {
+                "profile": { "name": "Grace Mutiso" },
+                "wa_id": "254712000003"
+              }
+            ],
+            "messages": [
+              {
+                "from": "254712000003",
+                "id": "wamid.HBgMMjU0NzEyMDAwMDAzFQIAEhggN0EwMDAwMDAwMDAwMDAwMwA=",
+                "timestamp": "1787059320",
+                "type": "image",
+                "image": {
+                  "id": "980000000000002",
+                  "mime_type": "image/jpeg",
+                  "sha256": "2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae",
+                  "caption": "Hii ndio card yangu ya bima"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

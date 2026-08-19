@@ -1,0 +1,35 @@
+{
+  "object": "whatsapp_business_account",
+  "entry": [
+    {
+      "id": "100000000000001",
+      "changes": [
+        {
+          "field": "messages",
+          "value": {
+            "messaging_product": "whatsapp",
+            "metadata": {
+              "display_phone_number": "254709000100",
+              "phone_number_id": "100000000000002"
+            },
+            "contacts": [
+              {
+                "profile": { "name": "Amina Njeri" },
+                "wa_id": "254712000001"
+              }
+            ],
+            "messages": [
+              {
+                "from": "254712000001",
+                "id": "wamid.HBgMMjU0NzEyMDAwMDAxFQIAEhggN0EwMDAwMDAwMDAwMDAwMQA=",
+                "timestamp": "1787059200",
+                "text": { "body": "Habari, naomba appointment kesho asubuhi" },
+                "type": "text"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

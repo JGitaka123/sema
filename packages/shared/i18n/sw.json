@@ -4,6 +4,8 @@
   "safety.out_of_scope": "Mimi ni msaidizi wa mapokezi, kwa hivyo siwezi kukushauri kuhusu dalili au dawa. Ninachoweza kufanya ni kukupatia miadi ya karibu zaidi na {provider}, au kumwomba muuguzi akupigie simu. Ungependa ipi?",
   "safety.abuse_warning": "Ningependa kuendelea kukusaidia, lakini tuheshimiane. Ungependa nikuunganishe na mfanyakazi wetu?",
 
+  "consent.ai_disclosure": "Ujumbe hapa unashughulikiwa na msaidizi wa {clinic}, anayetumia AI. Mfanyakazi wetu anaweza kuchukua mazungumzo wakati wowote — uliza tu. Jibu STOP kujiondoa. Faragha: {privacy_url}",
+
   "handover.in_hours": "Wacha nimtafute mfanyakazi wetu akusaidie. Mtu atakujibu hapa hivi punde.",
   "handover.out_of_hours": "Wenzangu hawapo hadi saa {opens_at}. Nimeweka ujumbe wako mbele ili waone mara ya kwanza. Kama ni dharura, tafadhali piga {clinic_phone}.",
   "handover.taken_over": "Sasa unaongea na mfanyakazi wetu.",

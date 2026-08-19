@@ -1,0 +1,38 @@
+{
+  "object": "whatsapp_business_account",
+  "entry": [
+    {
+      "id": "100000000000001",
+      "changes": [
+        {
+          "field": "messages",
+          "value": {
+            "messaging_product": "whatsapp",
+            "metadata": {
+              "display_phone_number": "254709000100",
+              "phone_number_id": "100000000000002"
+            },
+            "statuses": [
+              {
+                "id": "wamid.HBgMMjU0NzA5MDAwMTAwFQIAERgSN0EwMDAwMDAwMDAwMDBDRAA=",
+                "status": "failed",
+                "timestamp": "1787059440",
+                "recipient_id": "254712000009",
+                "errors": [
+                  {
+                    "code": 131026,
+                    "title": "Message undeliverable",
+                    "message": "Message undeliverable",
+                    "error_data": {
+                      "details": "Message Undeliverable."
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

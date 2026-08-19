@@ -9,6 +9,7 @@ import { closeDb, withTenantDb } from "../client.js";
 import {
   availabilityRule,
   clinic,
+  clinicWhatsapp,
   knowledgeItem,
   location,
   patient,
@@ -33,6 +34,7 @@ import {
   providerServiceRows,
   serviceRows,
   staffRows,
+  whatsappRows,
 } from "./fixtures.js";
 
 /**
@@ -97,6 +99,9 @@ export async function seed(): Promise<SeedResult> {
   await withTenantDb(AFYANEX_CLINIC_ID, async (db) => {
     // Order matters: parents before the rows that reference them.
     counts["clinic"] = await upsert(db, clinic, [clinicRow as Row], [clinic.id]);
+    counts["clinic_whatsapp"] = await upsert(db, clinicWhatsapp, whatsappRows as Row[], [
+      clinicWhatsapp.id,
+    ]);
     counts["location"] = await upsert(db, location, locationRows as Row[], [location.id]);
     counts["staff_user"] = await upsert(db, staffUser, staffRows as Row[], [staffUser.id]);
     counts["provider"] = await upsert(db, provider, providerRows as Row[], [provider.id]);
