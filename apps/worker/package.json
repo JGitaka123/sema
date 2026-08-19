@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@sema/db": "workspace:*",
+    "@sema/scheduling": "workspace:*",
     "@sema/shared": "workspace:*",
     "bullmq": "^5.34.4",
     "ioredis": "^5.4.2",

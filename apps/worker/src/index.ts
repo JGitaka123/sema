@@ -3,15 +3,17 @@ import { pathToFileURL } from "node:url";
 import { type Worker } from "bullmq";
 import pino from "pino";
 
+import { HOLD_EXPIRY_JOB, registerHoldExpiry, runHoldExpiry } from "./jobs/hold-expiry.js";
 import { ALL_QUEUE_NAMES, closeQueues, createWorker } from "./queues.js";
 
 /**
  * Worker process entrypoint.
  *
  * Phase 0 registers a consumer per queue with a placeholder processor so the
- * wiring, logging and shutdown path are real and reviewable. The actual
- * processors land with the features that need them: inbound in Phase 3,
- * payments in Phase 6, reminders in Phase 7 (docs/BUILD_PLAN.md).
+ * wiring, logging and shutdown path are real and reviewable. Phase 2 adds the
+ * first real one — hold expiry, on the `system` queue. The rest land with the
+ * features that need them: inbound in Phase 3, payments in Phase 6, reminders
+ * in Phase 7 (docs/BUILD_PLAN.md).
  */
 const log = pino({
   level: process.env["LOG_LEVEL"] ?? "info",
@@ -24,6 +26,7 @@ export function startWorkers(): Worker[] {
     createWorker(name, async (job) => {
       // Log the identity of the work, never its contents.
       log.info({ queue: name, jobName: job.name, jobId: job.id }, "job received");
+      if (job.name === HOLD_EXPIRY_JOB) return runHoldExpiry();
       return { ok: true };
     }),
   );
@@ -31,6 +34,7 @@ export function startWorkers(): Worker[] {
 
 async function main(): Promise<void> {
   const workers = startWorkers();
+  await registerHoldExpiry();
   log.info({ queues: ALL_QUEUE_NAMES }, "worker started");
 
   const shutdown = (signal: string): void => {

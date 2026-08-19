@@ -53,6 +53,18 @@ Anthropic API ◄────────────── packages/engine (cla
 - `holdSlot()` inserts `slot_hold` with 10 min TTL using an exclusion constraint on `(provider_id, tstzrange)` to prevent overlaps; `book()` converts hold → appointment atomically. Postgres `btree_gist` extension.
 - All computations in clinic timezone, stored UTC.
 
+### Implementation notes (Phase 2)
+
+`packages/scheduling/README.md` carries the detail; the decisions worth knowing here:
+
+- **The stored range is the occupied block.** `slot_hold.slot` and `appointment.slot` are `[start, start + duration_min + buffer_min)`. The patient-visible end is `start + duration_min`, and every result exposes both. Keeping `buffer_min` inside the range is what lets the exclusion constraint protect the turnaround time; filtering it in application code would reopen the race the constraint exists to close. A slot is offered when the *appointment* fits the working window — the buffer may run past closing, because it is cleanup, not care.
+- **`providerId` filters rather than merely ranks.** A patient who asks for a named clinician is not offered another one; the preference tiebreak still applies within a multi-provider result set, ahead of load balancing.
+- **`booking_window_days` counts clinic-local calendar days**, so "30 days out" survives a DST change; the horizon is the end of that local day.
+- **`appointment` statuses that occupy the calendar** are `booked`, `confirmed`, `arrived` *and* `pending_deposit` — a deposit-pending booking holds its slot, matching the exclusion constraint created in Phase 1.
+- **Hold expiry is housekeeping, not correctness.** The `slot_hold` exclusion constraint cannot carry the `expires_at > now()` predicate (an index predicate must be `IMMUTABLE`), so `holdSlot()` deletes that provider's expired holds inside the same transaction as its insert, and slot search filters on `expires_at > now()`. The `hold.expiry` worker job only keeps the table small.
+- **`expireHolds()` takes the clinic list from its caller.** The package never reads across tenants; `apps/worker/src/jobs/hold-expiry.ts` owns the one cross-tenant enumeration, per §3.
+- **No money moves.** `book()` sets `pending_deposit` and `deposit_required_minor`; `cancel()` and `reschedule()` record a forfeit decision and nothing else. Payments are Phase 6 (ADR-003, hard rule 5).
+
 ## 5. Payments (`packages/payments`)
 
 - Interface `PaymentProvider { requestPayment(req) → {providerRef}; parseCallback(raw) → PaymentEvent; queryStatus(ref) }`.
