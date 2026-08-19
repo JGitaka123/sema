@@ -99,3 +99,14 @@ Fail → one rewrite attempt with the violation named; second fail → generic s
 
 ## 10. Prompt versioning
 - `prompts/agent.v1.md`, `classifier.v1.md`. Changing behaviour = new version file + eval run + `PROMPT_VERSION` bump recorded on `message.meta.prompt_version`.
+
+## 11. Replies to reminders (Phase 7 seam)
+
+A reminder asks the patient to reply to confirm or reschedule (SPEC §4.4), and that reply arrives on the ordinary inbound path — a `message` on the patient's existing conversation, classified and routed like any other. **Phase 7 adds no branch to this pipeline and no reminder-specific state to the conversation.** `reminder.status` is a record of what was *sent*; nothing reads it during a turn.
+
+Two things the agent will want to do when it handles one, neither of which Phase 7 implements:
+
+- **Confirming.** Moving the appointment from `booked` to `confirmed` is an ordinary appointment write. The reminder rows need no update: the reconciler treats both statuses as remindable.
+- **Rescheduling.** The existing `reschedule_appointment` tool is enough. The old appointment's pending reminders are retired and the new appointment's created by the reconciler (ARCHITECTURE.md §4). The agent never writes to `reminder`, and there is no reminder tool.
+
+The one call the agent may want is `syncAppointmentReminders(client, {clinicId, appointmentId, now})` from `apps/worker/src/reminders/`, inside the same transaction as a booking, so a patient who books and immediately asks "will you remind me?" is not told about a row that does not exist yet. Skipping it is safe — `reminder.sync` reconciles within five minutes.

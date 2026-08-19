@@ -182,6 +182,24 @@ Implemented in `packages/db/src/schema`, created by `drizzle/0000_data_model.sql
 - Foreign keys were added where the sketch used a bare `text` id and the target is unambiguous (`time_off.provider_id`, `slot_hold.*`, `note.patient_id`/`conversation_id`). `note.appointment_id`, `encounter.*` and `appointment.encounter_id` stay unconstrained, to avoid an import cycle and Phase 3 coupling.
 - Roles (`sema_app`, `sema_system`) are environment setup, documented in `packages/db/README.md`, not created by migrations — managed Postgres providers differ on what a migration may do to roles.
 
+## Implementation notes (Phase 7)
+
+- **No new tables or columns.** Reminders, no-show marking and digests use `reminder`, `appointment`, `patient.flags`, `audit_log` and `outbox` exactly as sketched above. `drizzle/` is untouched.
+- **Reminder and digest configuration lives in `clinic.flags`.** SPEC §4.4 makes reminder offsets configurable per clinic *and per service*, and there is no column for either. Rather than migrate a schema three phases are working on concurrently, the knobs sit in the jsonb this table already designates for per-clinic configuration:
+
+  ```json
+  { "reminders": { "enabled": true, "pre24hMin": 1440, "pre2hMin": 120,
+                   "noShowAfterMin": 30, "noShowEnabled": true, "noShowRebook": true,
+                   "services": { "svc_01J…": { "pre2hMin": null } } },
+    "digests":   { "enabled": true, "morningHour": 7, "ownerWeekday": 1, "ownerHour": 8 } }
+  ```
+
+  Parsing is total (`apps/worker/src/reminders/config.ts`): a malformed blob falls back to the defaults rather than silently stopping a tenant's reminders. If Phase 8's settings UI wants validation at write time, promoting these to columns is a later, mechanical migration.
+- **`reminder.status` uses only the four documented values** (`scheduled | sent | skipped | failed`). There is no `sending` claim state: the sweep claims rows with `select … for update skip locked` and decides, enqueues and marks in one transaction, so a crash rolls the outbox row back with the status and a second run finds nothing to do.
+- **A reminder we chose not to send is `skipped`, not deleted.** "Why did my patient not get a reminder" is a question a clinic asks weeks later; the reason is on the `audit_log` row.
+- **`outbox.message_id` is nullable, and Phase 7 is the first to rely on it.** A digest addressed to a staff number has no `message` row, because `message.conversation_id` is `not null` and a conversation belongs to a patient — filing the clinic's own digest into a patient's thread would be wrong in the inbox. See `enqueueStaffNotification` in `apps/worker/src/jobs/outbox.ts`.
+- **Digest idempotency is an `audit_log` row** keyed `(clinic_id, action, entity_id = period key)`, taken under `pg_advisory_xact_lock`. The hourly sweep asks "is it my hour?" 24 times a day and must answer yes exactly once; a marker table for one row a week per clinic did not justify a migration.
+
 ## Implementation notes (Phase 3)
 - **`clinic_whatsapp`** added in `drizzle/0001_whatsapp_channel.sql`. It is not in the Phase 1 sketch above because ADR-001's Embedded Signup flow only became load-bearing when inbound routing arrived; INTEGRATIONS.md §1 always specified the fields. Onboarding writes it in Phase 9; Phase 3 only reads it.
 - **`access_token_encrypted`** holds ciphertext once Phase 9 lands envelope encryption (ARCHITECTURE.md §9). Until then a dev token sits there in plaintext and `apps/worker/src/channel.ts#decryptToken` is the single seam where real decryption goes.

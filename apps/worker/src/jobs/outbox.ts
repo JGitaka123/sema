@@ -144,6 +144,60 @@ export async function enqueueOutbound(
   return { messageId, outboxId };
 }
 
+/**
+ * Queue a template addressed to a **staff** number (INTEGRATIONS.md §5:
+ * "WhatsApp template to staff number for emergencies … email daily digest").
+ *
+ * Same door out of Sema, one row short of the patient path: no `message` row.
+ * `message.conversation_id` is `not null` and a conversation belongs to a
+ * patient, so giving a staff notification one would either invent a fake
+ * conversation or file the clinic's own digest into a patient's thread in the
+ * inbox. `outbox.message_id` is nullable precisely so a delivery can exist
+ * without a conversation, and `deliverOutbox` already reads it defensively.
+ *
+ * Templates only. There is no 24-hour window to reason about — a staff member
+ * has not messaged the clinic's own number — so a free-form body would be
+ * rejected by Meta, and `chooseDelivery` passes a template through untouched.
+ *
+ * Phase 7 (reminders/digests) is the first caller; Phase 8's escalation alerts
+ * are the next.
+ */
+export async function enqueueStaffNotification(
+  client: TenantClient,
+  params: {
+    clinicId: PrefixedId<"clinic">;
+    template: Omit<OutboundTemplate, "kind">;
+    /** Non-PHI context for the audit row: a digest kind, an escalation id. */
+    audit?: Record<string, string | number | boolean | null>;
+  },
+): Promise<{ outboxId: string }> {
+  const outboxId = newId("outbox");
+  const payload: OutboxPayload = {
+    message: { ...params.template, kind: "template" },
+  };
+
+  await client.query(
+    `insert into outbox (id, clinic_id, message_id, channel, payload, status, next_attempt_at)
+     values ($1, $2, null, 'whatsapp', $3::jsonb, 'pending', now())`,
+    [outboxId, params.clinicId, JSON.stringify(payload)],
+  );
+
+  await client.query(
+    `insert into audit_log (id, clinic_id, actor, action, entity, entity_id, after, at)
+     values ($1, $2, 'system', 'staff_notification.queued', 'outbox', $3, $4::jsonb, now())`,
+    [
+      newId("auditLog"),
+      params.clinicId,
+      outboxId,
+      // Template name and caller context only — never the parameters, which
+      // carry names and times (hard rule 4).
+      JSON.stringify({ template: params.template.templateName, ...(params.audit ?? {}) }),
+    ],
+  );
+
+  return { outboxId };
+}
+
 // ── The 24-hour window rule ──────────────────────────────────────────────────
 
 export type DeliveryChoice =
@@ -370,13 +424,17 @@ async function finalise(
       [claim.id, status, reason, status === "failed" ? nextAttemptAt(now, claim.attempts) : null],
     );
 
-    if (status === "dead" && claim.message_id) {
-      await client.query(
-        `update message set status = 'failed', updated_at = now() where id = $1`,
-        [claim.message_id],
-      );
-      // Dead letters are the thing an on-call human has to see
-      // (ARCHITECTURE.md §11: "dead-letter to inbox alert").
+    if (status === "dead") {
+      // A staff notification has no `message` row (`enqueueStaffNotification`),
+      // so the update is conditional but the audit is not: a dead letter is the
+      // thing an on-call human has to see either way (ARCHITECTURE.md §11:
+      // "dead-letter to inbox alert").
+      if (claim.message_id) {
+        await client.query(
+          `update message set status = 'failed', updated_at = now() where id = $1`,
+          [claim.message_id],
+        );
+      }
       await client.query(
         `insert into audit_log (id, clinic_id, actor, action, entity, entity_id, after, at)
          values ($1, $2, 'system', 'outbox.dead_letter', 'outbox', $3, $4::jsonb, now())`,
