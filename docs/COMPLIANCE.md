@@ -19,6 +19,7 @@
 - **Healthcare category:** no prohibited content; comply with Meta commerce and business policies. Sema (Tech Provider) responsible for its clients' compliance; monitor quality rating per number, throttle if `red`.
 - **Display name / business verification** handled during Embedded Signup.
 - **STOP handling:** patient replies STOP/ACHA → mark marketing opt-out (service messages about their own appointments still allowed unless they also request that; then mute all proactive).
+- **How Phase 7 enforces this.** Every reminder and every rebook nudge is an approved template, because a proactive message is by definition sent when the 24-hour window is closed. Before each send, `decideReminderSend` (`apps/worker/src/reminders/decide.ts`) refuses on: the newest `patient_consent(service_messages)` row being `granted = false`, `patient.flags.blocked`, or `conversation.mode = 'muted'` — the last being how "mute all proactive" is expressed. Absence of a consent row counts as permitted for *service* messages, per the line above; marketing is a separate consent kind and Phase 7 never sends it. A refusal is recorded as `reminder.status = 'skipped'` plus an `audit_log` row carrying the reason, so an opt-out is auditable and not merely effective.
 
 ## 4. Payments (M-Pesa)
 - Non-custodial: no CBK PSP licence needed since funds settle to the clinic's own account. Store Daraja credentials encrypted; never log. Show M-Pesa receipt numbers to staff only.

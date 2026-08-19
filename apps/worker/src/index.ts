@@ -5,6 +5,7 @@ import pino from "pino";
 
 import { HOLD_EXPIRY_JOB, registerHoldExpiry, runHoldExpiry } from "./jobs/hold-expiry.js";
 import { PROCESSORS } from "./jobs/index.js";
+import { registerReminderJobs, SYSTEM_JOB_HANDLERS } from "./jobs/reminders.js";
 import { ALL_QUEUE_NAMES, closeQueues, createWorker } from "./queues.js";
 
 /**
@@ -12,9 +13,9 @@ import { ALL_QUEUE_NAMES, closeQueues, createWorker } from "./queues.js";
  *
  * Phase 0 registered a consumer per queue with a placeholder processor so the
  * wiring, logging and shutdown path were real and reviewable. Phase 2 supplies
- * hold expiry on the `system` queue and Phase 3 `inbound` and `outbox` from
- * `./jobs`; the rest keep the placeholder until their phase: payments in
- * Phase 6, reminders in Phase 7 (docs/BUILD_PLAN.md).
+ * hold expiry on the `system` queue, Phase 3 `inbound` and `outbox` from
+ * `./jobs`, and Phase 7 the reminder, no-show and digest sweeps — also on
+ * `system`, addressed by job name. Payments (Phase 6) keep the placeholder.
  */
 const log = pino({
   level: process.env["LOG_LEVEL"] ?? "info",
@@ -33,14 +34,15 @@ export function startWorkers(): Worker[] {
       // Log the identity of the work, never its contents.
       log.info({ queue: name, jobName: job.name, jobId: job.id }, "job received");
 
-      // Hold expiry is addressed by job name on the shared `system` queue,
-      // not by a queue of its own, so it dispatches ahead of the per-queue map.
+      // The scheduled sweeps are addressed by job name on the shared `system`
+      // queue, not by a queue of their own, so they dispatch ahead of the
+      // per-queue map.
+      const systemHandler =
+        job.name === HOLD_EXPIRY_JOB ? runHoldExpiry : SYSTEM_JOB_HANDLERS[job.name];
+
       const handler =
-        job.name === HOLD_EXPIRY_JOB
-          ? runHoldExpiry
-          : processor
-            ? (): Promise<unknown> => Promise.resolve(processor(job, ""))
-            : undefined;
+        systemHandler ??
+        (processor ? (): Promise<unknown> => Promise.resolve(processor(job, "")) : undefined);
 
       if (!handler) return { ok: true };
 
@@ -74,6 +76,7 @@ function outcomeOf(result: unknown): string | undefined {
 async function main(): Promise<void> {
   const workers = startWorkers();
   await registerHoldExpiry();
+  await registerReminderJobs();
   log.info({ queues: ALL_QUEUE_NAMES }, "worker started");
 
   const shutdown = (signal: string): void => {

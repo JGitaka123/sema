@@ -8,7 +8,20 @@
 
 ### Per clinic (Embedded Signup)
 - Inbox "Connect WhatsApp" → Meta JS SDK → returns `code`, `waba_id`, `phone_number_id` → API exchanges code for token → store `clinic_whatsapp{waba_id, phone_number_id, token_encrypted, display_name, quality_rating}` → `POST /{waba_id}/subscribed_apps` → register number (`/register` with PIN) → create/submit templates:
-  - `appt_confirmation` (utility), `appt_reminder_24h`, `appt_reminder_2h`, `deposit_prompt`, `rebook_after_no_show`, `staff_followup` (utility, for reopening a window when staff needs to reach patient), `emergency_alert_staff` (utility, to staff numbers).
+  - `appt_confirmation` (utility), `appt_reminder_24h`, `appt_reminder_2h`, `deposit_prompt`, `rebook_after_no_show`, `staff_followup` (utility, for reopening a window when staff needs to reach patient), `emergency_alert_staff` (utility, to staff numbers), `staff_digest` (utility, to staff numbers — added in Phase 7 for the owner weekly and staff morning digests).
+
+#### Reminder template parameters (Phase 7)
+
+Positional, and a contract: reordering them changes what patients read without failing a build. Defined in `apps/worker/src/reminders/templates.ts` and asserted in its test.
+
+| Template | `{{1}}` | `{{2}}` | `{{3}}` | `{{4}}` | `{{5}}` |
+|---|---|---|---|---|---|
+| `appt_reminder_24h` | first name | service | provider | date + time | location |
+| `appt_reminder_2h` | first name | service | provider | time | — |
+| `rebook_after_no_show` | first name | service | missed date + time | — | — |
+| `staff_digest` | clinic name | period label | one-line summary | — | — |
+
+A template parameter may not contain a newline or a tab — Meta rejects the send — so the full digest text goes out by email and only the one-line summary reaches WhatsApp.
 - Trial clinics: use Sema's shared trial number until signup complete (patients see "Sema for {clinic}").
 
 ### Sending

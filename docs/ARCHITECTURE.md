@@ -67,6 +67,25 @@ Anthropic API ◄────────────── packages/engine (cla
 - **`expireHolds()` takes the clinic list from its caller.** The package never reads across tenants; `apps/worker/src/jobs/hold-expiry.ts` owns the one cross-tenant enumeration, per §3.
 - **No money moves.** `book()` sets `pending_deposit` and `deposit_required_minor`; `cancel()` and `reschedule()` record a forfeit decision and nothing else. Payments are Phase 6 (ADR-003, hard rule 5).
 
+### Reminders, no-show and digests (Phase 7)
+
+Implemented in `apps/worker/src/reminders/`, not in `packages/scheduling`. Four repeatable jobs on the shared `system` queue, addressed by job name the way `hold.expiry` is:
+
+| Job | Every | What it does |
+|---|---|---|
+| `reminder.sync` | 5 min | Re-derives the reminders each appointment in the next 72 h should have |
+| `reminder.send` | 1 min | Claims due reminders and queues the approved template through `outbox` |
+| `appointment.no_show` | 5 min | Marks, counts, audits and queues the rebook nudge |
+| `digest.sweep` | 1 h | Each clinic checks its own local hour and sends what is due |
+
+Three decisions worth knowing here:
+
+- **Reminder scheduling is a reconciler, not a lifecycle hook.** `syncAppointmentReminders(client, {clinicId, appointmentId, now})` derives the reminders an appointment *should* have and makes the database say so, which covers book, reschedule and cancel with one code path and is safe to run repeatedly. `reschedule()` creates a new appointment row rather than mutating one, and staff edits (Phase 8) and deposit confirmations (Phase 6) never pass through `book()` at all — a callback inside the scheduling package would miss all of them. Callers who want reminders to exist immediately call the reconciler inside their own transaction; `reminder.sync` is the net under everyone else. **This is the seam the conversation agent uses.**
+- **Every sweep is idempotent by construction, not by job key.** A repeatable BullMQ job is delivered at least once. `reminder.send` claims with `for update skip locked` and leaves rows in a terminal status; `appointment.no_show` can only claim a `booked`/`confirmed`/`pending_deposit` row once; the digests hold a transaction-scoped advisory lock and check `audit_log`. A duplicated delivery is therefore a no-op rather than a second message to a patient.
+- **Reminders always go out as templates.** A reminder is sent precisely because the patient has *not* written to us, so the 24-hour window is closed by definition (COMPLIANCE.md §3) and there is no free-form path to fall back from.
+
+Cross-tenant enumeration reuses `listClinicIds` from `hold-expiry.ts` — the one place in the worker that reads across tenants, per §3, and therefore the one place the role decision has to be made. Under `tenant_isolation` an `sema_app` connection with no `app.current_clinic` sees no clinics and every sweep becomes a silent no-op, so the deployment must grant the worker's role a read of `clinic`.
+
 ## 5. Payments (`packages/payments`)
 
 - Interface `PaymentProvider { requestPayment(req) → {providerRef}; parseCallback(raw) → PaymentEvent; queryStatus(ref) }`.
